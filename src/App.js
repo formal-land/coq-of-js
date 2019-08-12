@@ -1,26 +1,28 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, {Component} from 'react';
 import './App.css';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+export default class App extends Component {
+  state = {
+    jsInput: 'function id<A>(x: A): A {\n  return x;\n}\n',
+  };
 
-export default App;
+  onChangeJsInput = event => {
+    this.setState({jsInput: event.currentTarget.value});
+  };
+
+  render() {
+    const {jsInput} = this.state;
+    const coqOutput = 'Definition id {A : Type} (x : A) : A := x.\n'
+
+    return (
+      <div>
+        <div className="split left">
+          <textarea onChange={this.onChangeJsInput} value={jsInput} />
+        </div>
+        <div className="split right">
+          <code><pre>{coqOutput}</pre></code>
+        </div>
+      </div>
+    );
+  }
+}
