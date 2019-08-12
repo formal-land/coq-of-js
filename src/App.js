@@ -1,4 +1,6 @@
 import React, {Component} from 'react';
+import CoqOutput from './CoqOutput.js';
+
 import './App.css';
 
 export default class App extends Component {
@@ -12,16 +14,13 @@ export default class App extends Component {
 
   render() {
     const {jsInput} = this.state;
-    const coqOutput = 'Definition id {A : Type} (x : A) : A := x.\n'
 
     return (
       <div>
         <div className="split left">
           <textarea onChange={this.onChangeJsInput} value={jsInput} />
         </div>
-        <div className="split right">
-          <code><pre>{coqOutput}</pre></code>
-        </div>
+        <CoqOutput jsInput={jsInput} />
       </div>
     );
   }
