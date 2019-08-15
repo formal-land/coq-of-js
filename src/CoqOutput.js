@@ -1,12 +1,18 @@
 import React, {PureComponent} from 'react';
+import {parse} from '@babel/parser';
 
 export default class CoqOutput extends PureComponent {
   getCoqOutput() {
     const {jsInput} = this.props;
+    const ast = parse(jsInput, {
+      plugins: [
+        'flow',
+        'jsx',
+      ],
+      sourceType: 'module',
+    });
 
-    return `(* Generated code *)
-
-${jsInput}`;
+    return JSON.stringify(ast, null, 2);
   }
 
   render() {
