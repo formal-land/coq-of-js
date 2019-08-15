@@ -1,8 +1,13 @@
+// @flow
 import React, {PureComponent} from 'react';
 import codeFrame from 'babel-code-frame';
 import {parse} from '@babel/parser';
 
-export default class CoqOutput extends PureComponent {
+type Props = {
+  jsInput: string,
+};
+
+export default class CoqOutput extends PureComponent<Props> {
   getCoqOutput() {
     const {jsInput} = this.props;
 

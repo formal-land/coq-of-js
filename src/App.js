@@ -1,14 +1,20 @@
-import React, {Component} from 'react';
+// @flow
+import React, {PureComponent} from 'react';
 import CoqOutput from './CoqOutput.js';
-
 import './App.css';
 
-export default class App extends Component {
-  state = {
+type Props = {};
+
+type State = {
+  jsInput: string,
+};
+
+export default class App extends PureComponent<Props, State> {
+  state: State = {
     jsInput: 'function id<A>(x: A): A {\n  return x;\n}\n',
   };
 
-  onChangeJsInput = event => {
+  onChangeJsInput = (event: SyntheticEvent<*>) => {
     this.setState({jsInput: event.currentTarget.value});
   };
 
