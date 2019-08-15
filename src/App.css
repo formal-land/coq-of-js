@@ -1,21 +1,35 @@
 .split {
   height: 100%;
-  width: 50%;
+  width: 25%;
   position: fixed;
   top: 0;
 }
 
-.left {
+.js-source {
   left: 0;
 }
 
-.right {
+.js-ast {
+  left: 25%;
+  border-left: 1px solid grey;
+  overflow: auto;
+}
+
+.coq-ast {
+  left: 50%;
+  border-left: 1px solid grey;
+  overflow: auto;
+}
+
+.coq-source {
   right: 0;
+  border-left: 1px solid grey;
   overflow: auto;
 }
 
 textarea {
   box-sizing: border-box;
+  border: none;
   min-height: 100%;
   height: 100%;
   resize: none;
