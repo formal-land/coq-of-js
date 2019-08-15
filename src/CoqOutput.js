@@ -2,13 +2,14 @@
 import React, {PureComponent} from 'react';
 import codeFrame from 'babel-code-frame';
 import {parse} from '@babel/parser';
+import * as Program from "./compiler/program.js";
 
 type Props = {
   jsInput: string,
 };
 
 export default class CoqOutput extends PureComponent<Props> {
-  getCoqOutput() {
+  getCoqOutput(): string {
     const {jsInput} = this.props;
 
     try {
@@ -19,6 +20,9 @@ export default class CoqOutput extends PureComponent<Props> {
         ],
         sourceType: 'module',
       });
+      const compiledAst = Program.compile(ast.program);
+
+      console.log(JSON.stringify(compiledAst, null, 2));
 
       return JSON.stringify(ast, null, 2);
     } catch (error) {
