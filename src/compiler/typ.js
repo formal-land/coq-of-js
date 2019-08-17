@@ -21,3 +21,12 @@ export function compile(typ: any): t {
       throw new Error(JSON.stringify(typ, null, 2));
   }
 }
+
+export function print(typ: t): any {
+  switch (typ.type) {
+    case "Variable":
+      return typ.name;
+    default:
+      return typ;
+  }
+}

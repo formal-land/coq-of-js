@@ -16,3 +16,12 @@ export function compile(expression: any): t {
       throw new Error(JSON.stringify(expression, null, 2));
   }
 }
+
+export function print(expression: t): any {
+  switch (expression.type) {
+    case "Variable":
+      return expression.name;
+    default:
+      return;
+  }
+}

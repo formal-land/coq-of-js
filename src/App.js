@@ -1,10 +1,11 @@
 // @flow
-import React, {PureComponent} from 'react';
-import codeFrame from 'babel-code-frame';
-import {parse} from '@babel/parser';
+import React, {PureComponent} from "react";
+import codeFrame from "babel-code-frame";
+import {parse} from "@babel/parser";
+import doc from "prettier/doc.js";
 import * as Program from "./compiler/program.js";
-import Output from './Output.js';
-import './App.css';
+import Output from "./Output.js";
+import "./App.css";
 
 type Props = {};
 
@@ -51,10 +52,15 @@ export default class App extends PureComponent<Props, State> {
     }
   }
 
+  getCoqString(coqAst: Program.t): string {
+    return doc.printer.printDocToString(Program.print(coqAst), {printWidth: 40, tabWidth: 2}).formatted;
+  }
+
   render() {
     const {jsInput} = this.state;
     const jsAst = this.getJsAst(jsInput);
     const coqAst = typeof jsAst !== "string" ? this.getCoqAst(jsAst) : "";
+    const coqString = typeof coqAst !== "string" ? this.getCoqString(coqAst) : "";
 
     return (
       <div>
@@ -68,7 +74,7 @@ export default class App extends PureComponent<Props, State> {
           <Output output={coqAst} />
         </div>
         <div className="split coq-source">
-          <Output output="..." />
+          <Output output={coqString} />
         </div>
       </div>
     );
