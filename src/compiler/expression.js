@@ -5,6 +5,9 @@ export type t = {
   type: "BooleanLiteral",
   value: boolean,
 } | {
+  type: "NumericLiteral",
+  value: number,
+} | {
   type: "StringLiteral",
   value: string,
 } | {
@@ -24,6 +27,11 @@ export function compile(expression: any): t {
         type: "Variable",
         name: expression.name,
       };
+    case "NumericLiteral":
+      return {
+        type: "NumericLiteral",
+        value: expression.value,
+      };
     case "StringLiteral":
       return {
         type: "StringLiteral",
@@ -37,6 +45,8 @@ export function compile(expression: any): t {
 export function print(expression: t): Doc.t {
   switch (expression.type) {
     case "BooleanLiteral":
+      return JSON.stringify(expression.value);
+    case "NumericLiteral":
       return JSON.stringify(expression.value);
     case "StringLiteral":
       return JSON.stringify(expression.value);

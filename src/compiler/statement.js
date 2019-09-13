@@ -15,7 +15,7 @@ export type t = {
 export function compile(statement: any): t[] {
   switch (statement.type) {
     case "FunctionDeclaration": {
-      const returnTypAnnotation = statement.returnType ? statement.returnType.typeAnnotation : null;
+      const returnTyp = statement.returnType ? statement.returnType.typeAnnotation : null;
 
       return [{
         type: "Definition",
@@ -25,19 +25,23 @@ export function compile(statement: any): t[] {
         })),
         body: Expression.compile(statement.body.body[0].argument),
         name: statement.id.name,
-        returnTyp: returnTypAnnotation && Typ.compile(returnTypAnnotation),
+        returnTyp: returnTyp && Typ.compile(returnTyp),
         typParameters: statement.typeParameters ? statement.typeParameters.params.map(param => param.name) : [],
       }];
     }
     case "VariableDeclaration":
-      return statement.declarations.map(declaration => ({
-        type: "Definition",
-        arguments: [],
-        body: Expression.compile(declaration.init),
-        name: declaration.id.name,
-        returnTyp: null,
-        typParameters: [],
-      }));
+      return statement.declarations.map(declaration => {
+        const returnTyp = declaration.id.typeAnnotation ? declaration.id.typeAnnotation.typeAnnotation : null;
+
+        return {
+          type: "Definition",
+          arguments: [],
+          body: Expression.compile(declaration.init),
+          name: declaration.id.name,
+          returnTyp: returnTyp && Typ.compile(returnTyp),
+          typParameters: [],
+        };
+      });
     default:
       throw new Error(JSON.stringify(statement, null, 2));
   }
