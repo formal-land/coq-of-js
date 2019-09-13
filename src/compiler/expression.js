@@ -2,6 +2,9 @@
 import * as Doc from "./doc.js";
 
 export type t = {
+  type: "BooleanLiteral",
+  value: boolean,
+} | {
   type: "StringLiteral",
   value: string,
 } | {
@@ -11,6 +14,11 @@ export type t = {
 
 export function compile(expression: any): t {
   switch (expression.type) {
+    case "BooleanLiteral":
+      return {
+        type: "BooleanLiteral",
+        value: expression.value,
+      };
     case "Identifier":
       return {
         type: "Variable",
@@ -28,6 +36,8 @@ export function compile(expression: any): t {
 
 export function print(expression: t): Doc.t {
   switch (expression.type) {
+    case "BooleanLiteral":
+      return JSON.stringify(expression.value);
     case "StringLiteral":
       return JSON.stringify(expression.value);
     case "Variable":

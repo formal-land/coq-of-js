@@ -18,6 +18,8 @@ export default class App extends PureComponent<Props, State> {
     jsInput:
       `// Some examples
 
+const b = false;
+
 function id<A, B>(x: A): A {
   return x;
 }
