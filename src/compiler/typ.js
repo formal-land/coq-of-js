@@ -18,6 +18,11 @@ export function compile(typ: any): t {
         type: "Variable",
         name: "Z",
       };
+    case "StringTypeAnnotation":
+      return {
+        type: "Variable",
+        name: "string",
+      };
     default:
       throw new Error(JSON.stringify(typ, null, 2));
   }

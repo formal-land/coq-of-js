@@ -15,7 +15,17 @@ type State = {
 
 export default class App extends PureComponent<Props, State> {
   state: State = {
-    jsInput: 'function id<A>(x: A): A {\n  return x;\n}\n',
+    jsInput:
+      `// Some examples
+
+function id<A, B>(x: A): A {
+  return x;
+}
+
+function basicTypes(n: number, m: number): string {
+  return "OK";
+}
+`,
   };
 
   onChangeJsInput = (event: SyntheticEvent<*>) => {

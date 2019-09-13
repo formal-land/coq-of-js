@@ -9,7 +9,7 @@ export type t = {
   body: Expression.t,
   name: string,
   returnTyp: Typ.t,
-  typParameters: string[];
+  typParameters: string[],
 };
 
 export function compile(statement: any): t {
