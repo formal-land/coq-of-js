@@ -1,5 +1,5 @@
 // @flow
-import doc from "./doc.js";
+import * as Doc from "./doc.js";
 import * as Expression from "./expression.js";
 import * as Typ from "./typ.js";
 
@@ -31,27 +31,27 @@ export function compile(statement: any): t {
   }
 }
 
-export function print(statement: t): string {
+export function print(statement: t): Doc.t {
   switch (statement.type) {
     case "Definition":
-      return doc.group(doc.concat([
-        doc.group(doc.concat(["Definition", doc.line, statement.name])),
-        doc.indent(
-          doc.concat([
+      return Doc.group(Doc.concat([
+        Doc.group(Doc.concat(["Definition", Doc.line, statement.name])),
+        Doc.indent(
+          Doc.concat([
             ...(statement.typParameters.length !== 0
-              ? [doc.line, doc.group(doc.concat(["{", doc.join(doc.line, statement.typParameters)])), "}"]
+              ? [Doc.line, Doc.group(Doc.concat(["{", Doc.join(Doc.line, statement.typParameters)])), "}"]
               : []
             ),
-            doc.line,
-            doc.join(
-              doc.line,
+            Doc.line,
+            Doc.join(
+              Doc.line,
               statement.arguments.map(({name, typ}) =>
-                doc.group(doc.concat(["(", name, ":", doc.line, Typ.print(typ), ")"]))
+                Doc.group(Doc.concat(["(", name, ":", Doc.line, Typ.print(typ), ")"]))
               ),
             ),
-            doc.softline,
-            doc.group(doc.concat([":", doc.line, Typ.print(statement.returnTyp), doc.line, ":="])),
-            doc.hardline,
+            Doc.softline,
+            Doc.group(Doc.concat([":", Doc.line, Typ.print(statement.returnTyp), Doc.line, ":="])),
+            Doc.hardline,
             Expression.print(statement.body),
             "."
           ])

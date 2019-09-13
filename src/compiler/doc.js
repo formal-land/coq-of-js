@@ -1,17 +1,27 @@
 // @flow
 // A wrapper around Prettier doc primitives.
-import {builders} from "prettier/doc.js";
+import doc from "prettier/doc.js";
 
-export default builders;
+declare opaque type Doc;
 
-// const {
-//   align,
-//   concat,
-//   group,
-//   hardline,
-//   indent,
-//   join,
-//   line,
-// } = doc.builders;
+export type t = Doc | string;
 
-// export {align, concat, group, hardline, indent, join, line};
+const {
+  concat,
+  group,
+  hardline,
+  indent,
+  join,
+  line,
+  softline,
+}: {
+  concat: (docs: $ReadOnlyArray<t>) => t,
+  group: (doc: t) => t,
+  hardline: t,
+  indent: (doc: t) => t,
+  join: (sep: t, docs: $ReadOnlyArray<t>) => t,
+  line: t,
+  softline: t,
+} = doc.builders;
+
+export {concat, group, hardline, indent, join, line, softline};

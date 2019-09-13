@@ -1,4 +1,5 @@
 // @flow
+import * as Doc from "./doc.js";
 
 export type t = {
   type: "Variable",
@@ -22,7 +23,7 @@ export function compile(typ: any): t {
   }
 }
 
-export function print(typ: t): any {
+export function print(typ: t): Doc.t {
   switch (typ.type) {
     case "Variable":
       return typ.name;
