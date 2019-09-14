@@ -1,14 +1,6 @@
 // @flow
-
-type Cursor = {
-  column: number,
-  line: number,
-};
-
-type Location = {
-  end: Cursor,
-  start: Cursor,
-};
+import * as Error from "./error.js";
+import * as Location from "./location.js";
 
 type Yield = {
   type: "All",
@@ -16,7 +8,7 @@ type Yield = {
 } | {
   type: "LocationSet",
   expression: Generator<Yield, any, any>,
-  location: Location,
+  location: Location.t,
 } | {
   type: "Raise",
   message: string,
@@ -24,14 +16,9 @@ type Yield = {
 
 export type t<A> = Generator<Yield, A, any>;
 
-type Error = {
-  location: Location,
-  message: string,
-};
-
 type Result<A> = {
   type: "Error",
-  errors: Error[],
+  errors: Error.t[],
 } | {
   type: "Success",
   value: A,
@@ -41,7 +28,7 @@ export function* all<A>(expressions: t<A>[]): t<A[]> {
   return yield {type: "All", expressions};
 }
 
-export function* locationSet<A>(location: Location, expression: t<A>): t<A> {
+export function* locationSet<A>(location: Location.t, expression: t<A>): t<A> {
   return yield {type: "LocationSet", expression, location};
 }
 
@@ -49,7 +36,7 @@ export function* raise<A>(message: string): t<A> {
   return yield {type: "Raise", message};
 }
 
-function runWithAnswer<A>(location: Location, expression: t<A>, answer?: any): Result<any> {
+function runWithAnswer<A>(location: Location.t, expression: t<A>, answer?: any): Result<any> {
   const result = expression.next(answer);
 
   if (result.done) {
@@ -125,6 +112,6 @@ function runWithAnswer<A>(location: Location, expression: t<A>, answer?: any): R
   }
 }
 
-export function run<A>(location: Location, expression: t<A>): Result<A> {
+export function run<A>(location: Location.t, expression: t<A>): Result<A> {
   return runWithAnswer(location, expression);
 }
