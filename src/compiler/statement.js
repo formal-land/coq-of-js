@@ -39,7 +39,7 @@ export function* compile(statement: any): Monad.t<t[]> {
         return {
           type: "Definition",
           arguments: [],
-          body: Expression.compile(declaration.init),
+          body: yield* Expression.compile(declaration.init),
           name: declaration.id.name,
           returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
           typParameters: [],
