@@ -3,6 +3,7 @@ import React, {PureComponent} from "react";
 import codeFrame from "babel-code-frame";
 import {parse} from "@babel/parser";
 import doc from "prettier/doc.js";
+import * as Monad from "./compiler/monad.js";
 import * as Program from "./compiler/program.js";
 import Output from "./Output.js";
 import "./App.css";
@@ -61,10 +62,15 @@ function basicTypes(n: number, m: number): string {
   }
 
   getCoqAst(jsAst: any): any {
-    try {
-      return Program.compile(jsAst.program);
-    } catch (error) {
-      return `Error:\n${error.message}`;
+    const result = Monad.run(jsAst.loc, Program.compile(jsAst.program));
+
+    switch (result.type) {
+      case "Error":
+        return JSON.stringify(result.errors);
+      case "Success":
+        return result.value;
+      default:
+        return result;
     }
   }
 

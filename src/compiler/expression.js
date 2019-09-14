@@ -1,5 +1,6 @@
 // @flow
 import * as Doc from "./doc.js";
+import * as Monad from "./monad.js";
 
 export type t = {
   type: "BooleanLiteral",
@@ -15,7 +16,7 @@ export type t = {
   name: string,
 };
 
-export function compile(expression: any): t {
+export function* compile(expression: any): Monad.t<t> {
   switch (expression.type) {
     case "BooleanLiteral":
       return {
@@ -38,7 +39,7 @@ export function compile(expression: any): t {
         value: expression.value,
       };
     default:
-      throw new Error(JSON.stringify(expression, null, 2));
+      return yield* Monad.raise(JSON.stringify(expression, null, 2));
   }
 }
 
