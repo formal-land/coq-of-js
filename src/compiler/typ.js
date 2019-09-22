@@ -23,6 +23,11 @@ function compileIdentifierOrQualifiedTypeIdentifier(
 
 export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
   switch (typ.type) {
+    case "BooleanTypeAnnotation":
+      return {
+        type: "Variable",
+        name: "bool",
+      };
     case "GenericTypeAnnotation":
       return {
         type: "Variable",
