@@ -1,6 +1,7 @@
 // @flow
 import * as Doc from "./doc.js";
 import * as Expression from "./expression.js";
+import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 
 export type t = {
@@ -12,38 +13,40 @@ export type t = {
   typParameters: string[],
 };
 
-export function compile(statement: any): t[] {
+export function* compile(statement: any): Monad.t<t[]> {
   switch (statement.type) {
     case "FunctionDeclaration": {
       const returnTyp = statement.returnType ? statement.returnType.typeAnnotation : null;
 
       return [{
         type: "Definition",
-        arguments: statement.params.map(({name, typeAnnotation}) => ({
-          name,
-          typ: Typ.compile(typeAnnotation.typeAnnotation)
+        arguments: yield* Monad.all(statement.params.map(function*({name, typeAnnotation}) {
+          return {
+            name,
+            typ: yield* Typ.compile(typeAnnotation.typeAnnotation),
+          };
         })),
-        body: Expression.compile(statement.body.body[0].argument),
+        body: yield* Expression.compile(statement.body.body[0].argument),
         name: statement.id.name,
-        returnTyp: returnTyp && Typ.compile(returnTyp),
+        returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
         typParameters: statement.typeParameters ? statement.typeParameters.params.map(param => param.name) : [],
       }];
     }
     case "VariableDeclaration":
-      return statement.declarations.map(declaration => {
+      return yield* Monad.all(statement.declarations.map(function*(declaration) {
         const returnTyp = declaration.id.typeAnnotation ? declaration.id.typeAnnotation.typeAnnotation : null;
 
         return {
           type: "Definition",
           arguments: [],
-          body: Expression.compile(declaration.init),
+          body: yield* Expression.compile(declaration.init),
           name: declaration.id.name,
-          returnTyp: returnTyp && Typ.compile(returnTyp),
+          returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
           typParameters: [],
         };
-      });
+      }));
     default:
-      throw new Error(JSON.stringify(statement, null, 2));
+      return yield* Monad.raise(JSON.stringify(statement, null, 2));
   }
 }
 

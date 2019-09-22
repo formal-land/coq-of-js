@@ -1,12 +1,13 @@
 // @flow
 import * as Doc from "./doc.js";
+import * as Monad from "./monad.js";
 
 export type t = {
   type: "Variable",
   name: string,
 };
 
-export function compile(typ: any): t {
+export function* compile(typ: any): Monad.t<t> {
   switch (typ.type) {
     case "GenericTypeAnnotation":
       return {
@@ -24,7 +25,7 @@ export function compile(typ: any): t {
         name: "string",
       };
     default:
-      throw new Error(JSON.stringify(typ, null, 2));
+      return yield* Monad.raise(JSON.stringify(typ, null, 2));
   }
 }
 

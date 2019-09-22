@@ -3,6 +3,8 @@ import React, {PureComponent} from "react";
 import codeFrame from "babel-code-frame";
 import {parse} from "@babel/parser";
 import doc from "prettier/doc.js";
+import * as Error from "./compiler/error.js";
+import * as Monad from "./compiler/monad.js";
 import * as Program from "./compiler/program.js";
 import Output from "./Output.js";
 import "./App.css";
@@ -60,11 +62,16 @@ function basicTypes(n: number, m: number): string {
     }
   }
 
-  getCoqAst(jsAst: any): any {
-    try {
-      return Program.compile(jsAst.program);
-    } catch (error) {
-      return `Error:\n${error.message}`;
+  getCoqAst(source: string, jsAst: any): any {
+    const result = Monad.run(jsAst.loc, Program.compile(jsAst.program));
+
+    switch (result.type) {
+      case "Error":
+        return Error.print(source, result.errors);
+      case "Success":
+        return result.value;
+      default:
+        return result;
     }
   }
 
@@ -75,7 +82,7 @@ function basicTypes(n: number, m: number): string {
   render() {
     const {jsInput} = this.state;
     const jsAst = this.getJsAst(jsInput);
-    const coqAst = typeof jsAst !== "string" ? this.getCoqAst(jsAst) : "";
+    const coqAst = typeof jsAst !== "string" ? this.getCoqAst(jsInput, jsAst) : "";
     const coqString = typeof coqAst !== "string" ? this.getCoqString(coqAst) : "";
 
     return (
