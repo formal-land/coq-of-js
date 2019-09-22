@@ -1,6 +1,6 @@
 // @flow
 import * as BabelAst from "./babel-ast.js";
-import * as Error from "./error.js";
+import * as Result from "./result.js";
 
 type Yield = {
   type: "All",
@@ -12,14 +12,6 @@ type Yield = {
 };
 
 export type t<A> = Generator<Yield, A, any>;
-
-type Result<A> = {
-  type: "Error",
-  errors: Error.t[],
-} | {
-  type: "Success",
-  value: A,
-};
 
 export function* all<A>(expressions: t<A>[]): t<A[]> {
   return yield {type: "All", expressions};
@@ -33,7 +25,7 @@ export function* raiseUnhandled<A>(node: BabelAst.Node): t<A> {
   return yield* raise<A>(node, `Unhandled syntax:\n${JSON.stringify(node, null, 2)}`);
 }
 
-function runWithAnswer<A>(expression: t<A>, answer?: any): Result<any> {
+function runWithAnswer<A>(expression: t<A>, answer?: any): Result.t<any> {
   const result = expression.next(answer);
 
   if (result.done) {
@@ -43,49 +35,12 @@ function runWithAnswer<A>(expression: t<A>, answer?: any): Result<any> {
     };
   }
 
-  const nextAnswer: Result<any> = (() => {
+  const nextAnswer: Result.t<any> = (() => {
     switch (result.value.type) {
       case "All": {
         const results = result.value.expressions.map(expression => runWithAnswer(expression));
-        return results.reduce(
-          (accumulator: Result<any[]>, result) => {
-            switch (accumulator.type) {
-              case "Error":
-                switch (result.type) {
-                  case "Error":
-                    return {
-                      type: "Error",
-                      errors: [...accumulator.errors, ...result.errors],
-                    };
-                  case "Success":
-                    return {
-                      type: "Error",
-                      errors: accumulator.errors,
-                    };
-                  default:
-                    return result;
-                }
-              case "Success":
-                switch (result.type) {
-                  case "Error":
-                    return {
-                      type: "Error",
-                      errors: result.errors,
-                    };
-                  case "Success":
-                    return {
-                      type: "Success",
-                      value: [...accumulator.value, result.value],
-                    };
-                  default:
-                    return result;
-                }
-              default:
-                return accumulator;
-            }
-          },
-          {type: "Success", value: []}
-        );
+
+        return Result.merge(results);
       }
       case "Raise": {
         const error = {location: result.value.node.loc, message: result.value.message};
@@ -107,6 +62,6 @@ function runWithAnswer<A>(expression: t<A>, answer?: any): Result<any> {
   }
 }
 
-export function run<A>(expression: t<A>): Result<A> {
+export function run<A>(expression: t<A>): Result.t<A> {
   return runWithAnswer(expression);
 }
