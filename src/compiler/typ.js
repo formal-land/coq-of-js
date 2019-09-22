@@ -1,4 +1,5 @@
 // @flow
+import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
 import * as Monad from "./monad.js";
 
@@ -7,12 +8,25 @@ export type t = {
   name: string,
 };
 
-export function* compile(typ: any): Monad.t<t> {
+function compileIdentifierOrQualifiedTypeIdentifier(
+  id: BabelAst.Identifier | BabelAst.QualifiedTypeIdentifier
+): string {
+  switch (id.type) {
+    case "Identifier":
+      return id.name;
+    case "QualifiedTypeIdentifier":
+      return id.id.name;
+    default:
+      return id;
+  }
+}
+
+export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
   switch (typ.type) {
     case "GenericTypeAnnotation":
       return {
         type: "Variable",
-        name: typ.id.name,
+        name: compileIdentifierOrQualifiedTypeIdentifier(typ.id),
       };
     case "NumberTypeAnnotation":
       return {
@@ -25,7 +39,7 @@ export function* compile(typ: any): Monad.t<t> {
         name: "string",
       };
     default:
-      return yield* Monad.raise(JSON.stringify(typ, null, 2));
+      return yield* Monad.raiseUnhandled<t>(typ);
   }
 }
 

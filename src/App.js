@@ -57,21 +57,23 @@ function basicTypes(n: number, m: number): string {
       if (loc) {
         return `${error.message}\n\n${codeFrame(jsInput, loc.line, loc.column)}`;
       }
-
-      throw error;
     }
   }
 
-  getCoqAst(source: string, jsAst: any): any {
-    const result = Monad.run(jsAst.loc, Program.compile(jsAst.program));
+  getCoqAst(source: string, jsAst: any): any | string {
+    try {
+      const result = Monad.run(jsAst.loc, Program.compile(jsAst.program));
 
-    switch (result.type) {
-      case "Error":
-        return Error.print(source, result.errors);
-      case "Success":
-        return result.value;
-      default:
-        return result;
+      switch (result.type) {
+        case "Error":
+          return Error.print(source, result.errors);
+        case "Success":
+          return result.value;
+        default:
+          return result;
+      }
+    } catch (error) {
+      return error.message;
     }
   }
 

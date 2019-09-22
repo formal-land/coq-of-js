@@ -1,17 +1,18 @@
 // @flow
+import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
 import * as Monad from "./monad.js";
-import * as Statement from "./statement.js";
+import * as TopLevelStatement from "./top-level-statement.js";
 
-export type t = Statement.t[];
+export type t = TopLevelStatement.t[];
 
-export function* compile(program: {body: any[]}): Monad.t<t> {
+export function* compile(program: BabelAst.Program): Monad.t<t> {
   const unflattenedStatements = yield* Monad.all(
-    program.body.map(bodyElement => Monad.locationSet(bodyElement.loc, Statement.compile(bodyElement)))
+    program.body.map(statement => TopLevelStatement.compile(statement))
   );
 
   return unflattenedStatements.reduce(
-    (accumulator, statements) => [...accumulator, ...statements],
+    (accumulator: t, statements: TopLevelStatement.t[]) => [...accumulator, ...statements],
     [],
   );
 }
@@ -19,6 +20,6 @@ export function* compile(program: {body: any[]}): Monad.t<t> {
 export function print(program: t): Doc.t {
   return Doc.group(Doc.join(
     Doc.concat([Doc.hardline, Doc.hardline]),
-    program.map(programElement => Statement.print(programElement)),
+    program.map(programElement => TopLevelStatement.print(programElement)),
   ));
 }

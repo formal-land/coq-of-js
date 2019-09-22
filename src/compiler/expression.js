@@ -1,26 +1,31 @@
 // @flow
+import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
 import * as Monad from "./monad.js";
 
 export type t = {
-  type: "BooleanLiteral",
-  value: boolean,
+  type: "Constant",
+  value: boolean | number | string,
 } | {
-  type: "NumericLiteral",
-  value: number,
-} | {
-  type: "StringLiteral",
-  value: string,
+  type: "Let",
+  body: t,
+  definition: t,
+  name: string,
 } | {
   type: "Variable",
   name: string,
 };
 
-export function* compile(expression: any): Monad.t<t> {
+export const tt: t = {
+  type: "Variable",
+  name: "tt",
+};
+
+export function* compile(expression: BabelAst.Expression): Monad.t<t> {
   switch (expression.type) {
     case "BooleanLiteral":
       return {
-        type: "BooleanLiteral",
+        type: "Constant",
         value: expression.value,
       };
     case "Identifier":
@@ -28,29 +33,29 @@ export function* compile(expression: any): Monad.t<t> {
         type: "Variable",
         name: expression.name,
       };
+    case "NullLiteral":
+      return tt;
     case "NumericLiteral":
       return {
-        type: "NumericLiteral",
+        type: "Constant",
         value: expression.value,
       };
     case "StringLiteral":
       return {
-        type: "StringLiteral",
+        type: "Constant",
         value: expression.value,
       };
     default:
-      return yield* Monad.raise(JSON.stringify(expression, null, 2));
+      return yield* Monad.raiseUnhandled<t>(expression);
   }
 }
 
 export function print(expression: t): Doc.t {
   switch (expression.type) {
-    case "BooleanLiteral":
+    case "Constant":
       return JSON.stringify(expression.value);
-    case "NumericLiteral":
-      return JSON.stringify(expression.value);
-    case "StringLiteral":
-      return JSON.stringify(expression.value);
+    case "Let":
+      return "let";
     case "Variable":
       return expression.name;
     default:
