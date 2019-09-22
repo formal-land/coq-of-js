@@ -1,6 +1,6 @@
 // @flow
+import * as BabelAst from "./babel-ast.js";
 import * as Error from "./error.js";
-import * as Location from "./location.js";
 
 type Yield = {
   type: "All",
@@ -8,7 +8,7 @@ type Yield = {
 } | {
   type: "LocationSet",
   expression: Generator<Yield, any, any>,
-  location: Location.t,
+  location: BabelAst.SourceLocation,
 } | {
   type: "Raise",
   message: string,
@@ -28,7 +28,10 @@ export function* all<A>(expressions: t<A>[]): t<A[]> {
   return yield {type: "All", expressions};
 }
 
-export function* locationSet<A>(location: Location.t, expression: t<A>): t<A> {
+export function* locationSet<A>(
+  location: BabelAst.SourceLocation,
+  expression: t<A>
+): t<A> {
   return yield {type: "LocationSet", expression, location};
 }
 
@@ -36,7 +39,15 @@ export function* raise<A>(message: string): t<A> {
   return yield {type: "Raise", message};
 }
 
-function runWithAnswer<A>(location: Location.t, expression: t<A>, answer?: any): Result<any> {
+export function* raiseUnhandled<A>(node: BabelAst.Node): t<A> {
+  return yield* raise(`Unhandled syntax:\n${JSON.stringify(node, null, 2)}`);
+}
+
+function runWithAnswer<A>(
+  location: BabelAst.SourceLocation,
+  expression: t<A>,
+  answer?: any
+): Result<any> {
   const result = expression.next(answer);
 
   if (result.done) {
@@ -112,6 +123,6 @@ function runWithAnswer<A>(location: Location.t, expression: t<A>, answer?: any):
   }
 }
 
-export function run<A>(location: Location.t, expression: t<A>): Result<A> {
+export function run<A>(location: BabelAst.SourceLocation, expression: t<A>): Result<A> {
   return runWithAnswer(location, expression);
 }
