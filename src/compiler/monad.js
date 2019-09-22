@@ -6,12 +6,9 @@ type Yield = {
   type: "All",
   expressions: Generator<Yield, any, any>[],
 } | {
-  type: "LocationSet",
-  expression: Generator<Yield, any, any>,
-  location: BabelAst.SourceLocation,
-} | {
   type: "Raise",
   message: string,
+  node: BabelAst.Node,
 };
 
 export type t<A> = Generator<Yield, A, any>;
@@ -28,26 +25,15 @@ export function* all<A>(expressions: t<A>[]): t<A[]> {
   return yield {type: "All", expressions};
 }
 
-export function* locationSet<A>(
-  location: BabelAst.SourceLocation,
-  expression: t<A>
-): t<A> {
-  return yield {type: "LocationSet", expression, location};
-}
-
-export function* raise<A>(message: string): t<A> {
-  return yield {type: "Raise", message};
+export function* raise<A>(node: BabelAst.Node, message: string): t<A> {
+  return yield {type: "Raise", message, node};
 }
 
 export function* raiseUnhandled<A>(node: BabelAst.Node): t<A> {
-  return yield* raise(`Unhandled syntax:\n${JSON.stringify(node, null, 2)}`);
+  return yield* raise<A>(node, `Unhandled syntax:\n${JSON.stringify(node, null, 2)}`);
 }
 
-function runWithAnswer<A>(
-  location: BabelAst.SourceLocation,
-  expression: t<A>,
-  answer?: any
-): Result<any> {
+function runWithAnswer<A>(expression: t<A>, answer?: any): Result<any> {
   const result = expression.next(answer);
 
   if (result.done) {
@@ -60,7 +46,7 @@ function runWithAnswer<A>(
   const nextAnswer: Result<any> = (() => {
     switch (result.value.type) {
       case "All": {
-        const results = result.value.expressions.map(expression => runWithAnswer(location, expression));
+        const results = result.value.expressions.map(expression => runWithAnswer(expression));
         return results.reduce(
           (accumulator: Result<any[]>, result) => {
             switch (accumulator.type) {
@@ -101,10 +87,8 @@ function runWithAnswer<A>(
           {type: "Success", value: []}
         );
       }
-      case "LocationSet":
-        return runWithAnswer(result.value.location, result.value.expression);
       case "Raise": {
-        const error = {location, message: result.value.message};
+        const error = {location: result.value.node.loc, message: result.value.message};
 
         return {type: "Error", errors: [error]};
       }
@@ -117,12 +101,12 @@ function runWithAnswer<A>(
     case "Error":
       return nextAnswer;
     case "Success":
-      return runWithAnswer(location, expression, nextAnswer.value);
+      return runWithAnswer(expression, nextAnswer.value);
     default:
       return nextAnswer;
   }
 }
 
-export function run<A>(location: BabelAst.SourceLocation, expression: t<A>): Result<A> {
-  return runWithAnswer(location, expression);
+export function run<A>(expression: t<A>): Result<A> {
+  return runWithAnswer(expression);
 }

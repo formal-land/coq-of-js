@@ -26,7 +26,7 @@ function* extractIdentifierOfLVal(lval: BabelAst.LVal): Monad.t<BabelAst.Identif
     case "Identifier":
       return lval;
     default:
-      return yield* Monad.raise<BabelAst.Identifier>("Expected identifier");
+      return yield* Monad.raise<BabelAst.Identifier>(lval, "Expected simple identifier");
   }
 }
 
@@ -45,19 +45,22 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
                   typ:
                     param.typeAnnotation
                       ? yield* Typ.compile(param.typeAnnotation.typeAnnotation)
-                      : yield* Monad.raise<Typ.t>("Expected type annotation"),
+                      : yield* Monad.raise<Typ.t>(param, "Expected type annotation"),
                 };
             default:
-              return yield* Monad.raise<Argument>("Expected simple identifier as function parameter");
+              return yield* Monad.raise<Argument>(param, "Expected simple identifier as function parameter");
           }
         })),
         body: yield* Statement.compile(declaration.body.body),
         name:
           declaration.id
             ? declaration.id.name
-            : yield* Monad.raise<string>("Expected named function"),
+            : yield* Monad.raise<string>(declaration, "Expected named function"),
         returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
-        typParameters: declaration.typeParameters ? Util.filterMap(declaration.typeParameters.params, param => param.name) : [],
+        typParameters:
+          declaration.typeParameters
+            ? Util.filterMap(declaration.typeParameters.params, param => param.name)
+            : [],
       }];
     }
     case "VariableDeclaration":
@@ -71,7 +74,7 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
           body:
             declaration.init
               ? yield* Expression.compile(declaration.init)
-              : yield* Monad.raise<Expression.t>("Expected definition"),
+              : yield* Monad.raise<Expression.t>(declaration, "Expected definition"),
           name: id.name,
           returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
           typParameters: [],

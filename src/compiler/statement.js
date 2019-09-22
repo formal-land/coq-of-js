@@ -13,9 +13,9 @@ export function* compile(statements: BabelAst.Statement[]): Monad.t<Expression.t
           ? yield* Expression.compile(statements[0].argument)
           : Expression.tt;
       default:
-        return yield* Monad.raise<Expression.t>("Expected a return");
+        return yield* Monad.raise<Expression.t>(statements[0], "Expected a return");
     }
   }
 
-  return yield* Monad.raise<Expression.t>("Expected a simple return");
+  return yield* Monad.raise<Expression.t>(statements[0], "Expected a simple return");
 }

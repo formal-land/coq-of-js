@@ -62,7 +62,7 @@ function basicTypes(n: number, m: number): string {
 
   getCoqAst(source: string, jsAst: any): any | string {
     try {
-      const result = Monad.run(jsAst.loc, Program.compile(jsAst.program));
+      const result = Monad.run(Program.compile(jsAst.program));
 
       switch (result.type) {
         case "Error":

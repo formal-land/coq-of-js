@@ -3,7 +3,7 @@ import {codeFrameColumns} from "@babel/code-frame";
 import * as BabelAst from "./babel-ast.js";
 
 export type t = {
-  location: BabelAst.SourceLocation,
+  location: ?BabelAst.SourceLocation,
   message: string,
 };
 
@@ -12,5 +12,5 @@ export function print(source: string, errors: t[]): string {
     const errorSourceCode = codeFrameColumns(source, error.location);
 
     return `${errorSourceCode}\n\n${error.message}`;
-  }).join("\n\n");
+  }).join("\n\n**********************\n\n");
 }
