@@ -26,6 +26,8 @@ const
 
 const s = "hi";
 
+const a = [1, 2, 3];
+
 function id<A, B>(x: A): A {
   return x;
 }
