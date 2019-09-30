@@ -4,6 +4,11 @@ import * as Doc from "./doc.js";
 import * as Monad from "./monad.js";
 
 export type t = {
+  type: "BinaryExpression",
+  left: t,
+  operator: string,
+  right: t
+} | {
   type: "Constant",
   value: boolean | number | string,
 } | {
@@ -23,6 +28,13 @@ export const tt: t = {
 
 export function* compile(expression: BabelAst.Expression): Monad.t<t> {
   switch (expression.type) {
+    case "BinaryExpression":
+      return {
+        type: "BinaryExpression",
+        left: yield* compile(expression.left),
+        operator: expression.operator,
+        right: yield* compile(expression.right),
+      };
     case "BooleanLiteral":
       return {
         type: "Constant",
@@ -52,6 +64,10 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
 
 export function print(expression: t): Doc.t {
   switch (expression.type) {
+    case "BinaryExpression":
+      return Doc.group(
+        Doc.join(Doc.line, [print(expression.left),expression.operator, print(expression.right)])
+      );
     case "Constant":
       return JSON.stringify(expression.value);
     case "Let":
