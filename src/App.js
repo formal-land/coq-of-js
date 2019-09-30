@@ -28,6 +28,8 @@ const s = "hi";
 
 const a = [1, 2, 3];
 
+const cond = b ? "a" : 'b';
+
 function id<A, B>(x: A): A {
   return x;
 }

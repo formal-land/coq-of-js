@@ -16,6 +16,11 @@ export type t = {
   arguments: t[],
   callee: t,
 } | {
+  type: "ConditionalExpression",
+  alternate: t,
+  consequent: t,
+  test: t,
+} | {
   type: "Constant",
   value: boolean | number | string,
 } | {
@@ -75,6 +80,14 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         })),
         callee: yield* compile(expression.callee),
       };
+    case "ConditionalExpression": {
+      return {
+        type: "ConditionalExpression",
+        alternate: yield* compile(expression.alternate),
+        consequent: yield* compile(expression.consequent),
+        test: yield* compile(expression.test),
+      };
+    }
     case "Identifier":
       return {
         type: "Variable",
@@ -145,6 +158,34 @@ export function print(needParens: boolean, expression: t): Doc.t {
           )
         )
       );
+    case "ConditionalExpression": {
+      return Doc.paren(
+        needParens,
+        Doc.group(
+          Doc.concat([
+            Doc.group(
+              Doc.concat([
+                "if",
+                Doc.line,
+                print(false, expression.test),
+                Doc.line,
+                "then",
+              ])
+            ),
+            Doc.indent(Doc.concat([
+              Doc.line,
+              print(false, expression.consequent),
+            ])),
+            Doc.line,
+            "else",
+            Doc.indent(Doc.concat([
+              Doc.line,
+              print(false, expression.alternate),
+            ])),
+          ])
+        )
+      );
+    }
     case "Constant":
       return JSON.stringify(expression.value);
     case "Variable":
