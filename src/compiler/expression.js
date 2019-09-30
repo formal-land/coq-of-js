@@ -12,13 +12,12 @@ export type t = {
   operator: string,
   right: t
 } | {
+  type: "CallExpression",
+  arguments: t[],
+  callee: t,
+} | {
   type: "Constant",
   value: boolean | number | string,
-} | {
-  type: "Let",
-  body: t,
-  definition: t,
-  name: string,
 } | {
   type: "Variable",
   name: string,
@@ -38,16 +37,16 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
           expression.elements
             ? yield* Monad.all(expression.elements.map(function*(element) {
               if (!element) {
-                return yield* Monad.raise(expression, "Expected non-empty elements in the array");
+                return yield* Monad.raise<t>(expression, "Expected non-empty elements in the array");
               }
 
               if (element.type === "SpreadElement") {
-                return yield* Monad.raise(element, "Spread operator not handled");
+                return yield* Monad.raise<t>(element, "Spread operator not handled");
               }
 
               return yield* compile(element);
             }))
-            : yield* Monad.raise(expression, "Expected an array expression"),
+            : yield* Monad.raise<t[]>(expression, "Expected an array expression"),
       };
     case "BinaryExpression":
       return {
@@ -60,6 +59,21 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
       return {
         type: "Constant",
         value: expression.value,
+      };
+    case "CallExpression":
+      return {
+        type: "CallExpression",
+        arguments: yield* Monad.all(expression.arguments.map(function*(argument) {
+          switch (argument.type) {
+            case "ArgumentPlaceholder":
+            case "JSXNamespacedName":
+            case "SpreadElement":
+              return yield* Monad.raise<t>(argument, "Unhandled function argument");
+            default:
+              return yield* compile(argument);
+          }
+        })),
+        callee: yield* compile(expression.callee),
       };
     case "Identifier":
       return {
@@ -83,7 +97,7 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
   }
 }
 
-export function print(expression: t): Doc.t {
+export function print(needParens: boolean, expression: t): Doc.t {
   switch (expression.type) {
     case "ArrayExpression":
       if (expression.elements.length === 0) {
@@ -96,21 +110,43 @@ export function print(expression: t): Doc.t {
           Doc.indent(
             Doc.concat([
               Doc.line,
-              Doc.join(Doc.concat([",", Doc.line]), expression.elements.map(element => print(element))),
+              Doc.join(
+                Doc.concat([",", Doc.line]),
+                expression.elements.map(element => print(false, element))
+              ),
             ])
-            ),
+          ),
           Doc.line,
           "]"
         ])
       );
     case "BinaryExpression":
-      return Doc.group(
-        Doc.join(Doc.line, [print(expression.left),expression.operator, print(expression.right)])
+      return Doc.paren(
+        needParens,
+        Doc.group(
+          Doc.join(
+            Doc.line,
+            [print(true, expression.left),expression.operator, print(true, expression.right)]
+          )
+        )
+      );
+    case "CallExpression":
+      return Doc.paren(
+        needParens,
+        Doc.group(
+          Doc.indent(
+            Doc.join(
+              Doc.line,
+              [
+                print(true, expression.callee),
+                ...expression.arguments.map(argument => print(true, argument)),
+              ],
+            )
+          )
+        )
       );
     case "Constant":
       return JSON.stringify(expression.value);
-    case "Let":
-      return "let";
     case "Variable":
       return expression.name;
     default:

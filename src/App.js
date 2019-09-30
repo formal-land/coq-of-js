@@ -35,6 +35,9 @@ function id<A, B>(x: A): A {
 function basicTypes(n: number, m: number): string {
   return "OK";
 }
+
+const r = id(basicTypes(12, 23));
+
 `,
   };
 

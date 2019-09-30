@@ -113,7 +113,7 @@ export function print(declaration: t): Doc.t {
                   ])
                 ),
                 Doc.hardline,
-                Expression.print(declaration.body),
+                Expression.print(false, declaration.body),
                 "."
               ]
             )

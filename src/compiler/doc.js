@@ -25,3 +25,7 @@ const {
 } = doc.builders;
 
 export {concat, group, hardline, indent, join, line, softline};
+
+export function paren(needParens: boolean, doc: t): t {
+  return needParens ? group(concat(["(", doc, ")"])) : doc;
+}
