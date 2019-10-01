@@ -23,12 +23,16 @@ export type t = {
   consequent: t,
   test: t,
 } | {
+  type: "Constant",
+  value: boolean | number | string,
+} | {
   type: "FunctionExpression",
   // eslint-disable-next-line no-use-before-define
   value: Fun,
 } | {
-  type: "Constant",
-  value: boolean | number | string,
+  type: "TypeCastExpression",
+  expression: t,
+  typeAnnotation: Typ.t,
 } | {
   type: "UnaryExpression",
   argument: t,
@@ -73,7 +77,7 @@ export function* compileStatements(statements: BabelAst.Statement[]): Monad.t<t>
 }
 
 export function* compileFun(
-  fun : BabelAst.FunctionDeclaration | BabelAst.FunctionExpression
+  fun : BabelAst.FunctionDeclaration | BabelAst.FunctionExpression | BabelAst.ArrowFunctionExpression
 ) : Monad.t<Fun> {
   const returnTyp = fun.returnType ? fun.returnType.typeAnnotation : null;
 
@@ -92,7 +96,10 @@ export function* compileFun(
           return yield* Monad.raise<FunArgument>(param, "Expected simple identifier as function parameter");
       }
     })),
-    body: yield* compileStatements(fun.body.body),
+    body:
+      fun.body.type === "BlockStatement"
+        ? yield* compileStatements(fun.body.body)
+        : yield* compile(fun.body),
     returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
     typParameters:
       fun.typeParameters
@@ -120,6 +127,11 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
               return yield* compile(element);
             }))
             : yield* Monad.raise<t[]>(expression, "Expected an array expression"),
+      };
+    case "ArrowFunctionExpression":
+      return {
+        type: "FunctionExpression",
+        value: yield* compileFun(expression),
       };
     case "BinaryExpression":
       return {
@@ -185,6 +197,12 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
       return {
         type: "Constant",
         value: expression.value,
+      };
+    case "TypeCastExpression":
+      return {
+        type: "TypeCastExpression",
+        expression: yield* compile(expression.expression),
+        typeAnnotation: yield* Typ.compile(expression.typeAnnotation.typeAnnotation),
       };
     case "UnaryExpression":
       return {
@@ -291,24 +309,42 @@ export function print(needParens: boolean, expression: t): Doc.t {
         needParens,
         Doc.group(
           Doc.concat([
-            "fun",
-            Doc.indent(
+            Doc.group(
               Doc.concat([
-                ...(expression.value.typParameters.length !== 0
-                  ? [Doc.line, Typ.printImplicitTyps(expression.value.typParameters)]
-                  : []
+                "fun",
+                Doc.indent(
+                  Doc.concat([
+                    ...(expression.value.typParameters.length !== 0
+                      ? [Doc.line, Typ.printImplicitTyps(expression.value.typParameters)]
+                      : []
+                    ),
+                    printFunArguments(expression.value.arguments),
+                  ]),
                 ),
-                printFunArguments(expression.value.arguments),
+                Doc.line,
+                "=>",
               ]),
             ),
-            Doc.line,
-            "=>",
             Doc.indent(
               Doc.concat([Doc.line, print(false, expression.value.body)])
             ),
           ])
         )
       );
+    case "TypeCastExpression":
+      return Doc.group(
+        Doc.concat([
+          "(",
+          Doc.softline,
+          print(true, expression.expression),
+          Doc.line,
+          ":",
+          Doc.line,
+          Typ.print(expression.typeAnnotation),
+          Doc.softline,
+          ")",
+        ])
+      )
     case "UnaryExpression":
       return Doc.paren(
         needParens,

@@ -26,7 +26,7 @@ const
 
 const s = "hi";
 
-const a = [1, 2, 3];
+const a = [1, (2 : number), 3];
 
 const cond = b ? "a" : 'b';
 
