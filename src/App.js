@@ -21,7 +21,7 @@ export default class App extends PureComponent<Props, State> {
       `// Some examples
 
 const
-  b: boolean = false,
+  b: boolean = false && true,
   n: number = 12 + 23;
 
 const s = "hi";

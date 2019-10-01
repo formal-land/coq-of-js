@@ -161,6 +161,13 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         type: "Variable",
         name: expression.name,
       };
+    case "LogicalExpression":
+      return {
+        type: "BinaryExpression",
+        left: yield* compile(expression.left),
+        operator: expression.operator,
+        right: yield* compile(expression.right),
+      };
     case "NullLiteral":
       return tt;
     case "NumericLiteral":
