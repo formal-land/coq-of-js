@@ -30,6 +30,10 @@ export type t = {
   type: "Constant",
   value: boolean | number | string,
 } | {
+  type: "UnaryExpression",
+  argument: t,
+  operator: string,
+} | {
   type: "Variable",
   name: string,
 };
@@ -175,11 +179,19 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         type: "Constant",
         value: expression.value,
       };
+    case "ParenthesizedExpression":
+      return yield* compile(expression.expression);
     case "StringLiteral":
       return {
         type: "Constant",
         value: expression.value,
       };
+    case "UnaryExpression":
+      return {
+        type: "UnaryExpression",
+        argument: yield* compile(expression.argument),
+        operator: expression.operator,
+      }
     default:
       return yield* Monad.raiseUnhandled<t>(expression);
   }
@@ -296,6 +308,11 @@ export function print(needParens: boolean, expression: t): Doc.t {
             ),
           ])
         )
+      );
+    case "UnaryExpression":
+      return Doc.paren(
+        needParens,
+        Doc.group(Doc.concat([expression.operator, Doc.line, print(true, expression.argument)])),
       );
     case "Variable":
       return expression.name;

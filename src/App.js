@@ -22,7 +22,7 @@ export default class App extends PureComponent<Props, State> {
 
 const
   b: boolean = false && true,
-  n: number = 12 + 23;
+  n: number = -12 + 23;
 
 const s = "hi";
 
