@@ -44,7 +44,7 @@ export type t = {
 
 export type FunArgument = {
   name: string,
-  typ: Typ.t,
+  typ: ?Typ.t,
 };
 
 export type Fun = {
@@ -90,7 +90,7 @@ export function* compileFun(
               typ:
                 param.typeAnnotation
                   ? yield* Typ.compile(param.typeAnnotation.typeAnnotation)
-                  : yield* Monad.raise<Typ.t>(param, "Expected type annotation"),
+                  : null,
             };
         default:
           return yield* Monad.raise<FunArgument>(param, "Expected simple identifier as function parameter");
@@ -220,7 +220,10 @@ export function printFunArguments(funArguments: FunArgument[]): Doc.t {
     funArguments.map(({name, typ}) =>
       Doc.concat([
         Doc.line,
-        Doc.group(Doc.concat(["(", name, Doc.line, ":", Doc.line, Typ.print(typ), ")"])),
+        (typ
+          ? Doc.group(Doc.concat(["(", name, Doc.line, ":", Doc.line, Typ.print(typ), ")"]))
+          : name
+        ),
       ])
     )
   );

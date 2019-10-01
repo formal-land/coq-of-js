@@ -43,6 +43,8 @@ const r = id(basicTypes(12, 23));
 const f = function<A> (x : A, y : A): bool {
   return true;
 }
+
+const arrow = x => x + 1;
 `,
   };
 
