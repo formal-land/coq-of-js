@@ -2,6 +2,8 @@
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
 import * as Monad from "./monad.js";
+import * as Typ from "./typ.js";
+import * as Util from "./util.js";
 
 export type t = {
   type: "ArrayExpression",
@@ -21,6 +23,10 @@ export type t = {
   consequent: t,
   test: t,
 } | {
+  type: "FunctionExpression",
+  // eslint-disable-next-line no-use-before-define
+  value: Fun,
+} | {
   type: "Constant",
   value: boolean | number | string,
 } | {
@@ -28,10 +34,68 @@ export type t = {
   name: string,
 };
 
+export type FunArgument = {
+  name: string,
+  typ: Typ.t,
+};
+
+export type Fun = {
+  arguments: FunArgument[],
+  body: t,
+  returnTyp: ?Typ.t,
+  typParameters: string[],
+};
+
 export const tt: t = {
   type: "Variable",
   name: "tt",
 };
+
+export function* compileStatements(statements: BabelAst.Statement[]): Monad.t<t> {
+  if (statements.length === 0) {
+    return tt;
+  } else if (statements.length === 1) {
+    switch (statements[0].type) {
+      case "ReturnStatement":
+        return statements[0].argument
+          ? yield* compile(statements[0].argument)
+          : tt;
+      default:
+        return yield* Monad.raise<t>(statements[0], "Expected a return");
+    }
+  }
+
+  return yield* Monad.raise<t>(statements[0], "Expected a simple return");
+}
+
+export function* compileFun(
+  fun : BabelAst.FunctionDeclaration | BabelAst.FunctionExpression
+) : Monad.t<Fun> {
+  const returnTyp = fun.returnType ? fun.returnType.typeAnnotation : null;
+
+  return {
+    arguments: yield* Monad.all(fun.params.map(function*(param) {
+      switch (param.type) {
+        case "Identifier":
+            return {
+              name: param.name,
+              typ:
+                param.typeAnnotation
+                  ? yield* Typ.compile(param.typeAnnotation.typeAnnotation)
+                  : yield* Monad.raise<Typ.t>(param, "Expected type annotation"),
+            };
+        default:
+          return yield* Monad.raise<FunArgument>(param, "Expected simple identifier as function parameter");
+      }
+    })),
+    body: yield* compileStatements(fun.body.body),
+    returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
+    typParameters:
+      fun.typeParameters
+        ? Util.filterMap(fun.typeParameters.params, param => param.name)
+        : [],
+  };
+}
 
 export function* compile(expression: BabelAst.Expression): Monad.t<t> {
   switch (expression.type) {
@@ -80,14 +144,18 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         })),
         callee: yield* compile(expression.callee),
       };
-    case "ConditionalExpression": {
+    case "ConditionalExpression":
       return {
         type: "ConditionalExpression",
         alternate: yield* compile(expression.alternate),
         consequent: yield* compile(expression.consequent),
         test: yield* compile(expression.test),
       };
-    }
+    case "FunctionExpression":
+      return {
+        type: "FunctionExpression",
+        value: yield* compileFun(expression),
+      };
     case "Identifier":
       return {
         type: "Variable",
@@ -108,6 +176,17 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
     default:
       return yield* Monad.raiseUnhandled<t>(expression);
   }
+}
+
+export function printFunArguments(funArguments: FunArgument[]): Doc.t {
+  return Doc.concat(
+    funArguments.map(({name, typ}) =>
+      Doc.concat([
+        Doc.line,
+        Doc.group(Doc.concat(["(", name, Doc.line, ":", Doc.line, Typ.print(typ), ")"])),
+      ])
+    )
+  );
 }
 
 export function print(needParens: boolean, expression: t): Doc.t {
@@ -188,6 +267,29 @@ export function print(needParens: boolean, expression: t): Doc.t {
     }
     case "Constant":
       return JSON.stringify(expression.value);
+    case "FunctionExpression":
+      return Doc.paren(
+        needParens,
+        Doc.group(
+          Doc.concat([
+            "fun",
+            Doc.indent(
+              Doc.concat([
+                ...(expression.value.typParameters.length !== 0
+                  ? [Doc.line, Typ.printImplicitTyps(expression.value.typParameters)]
+                  : []
+                ),
+                printFunArguments(expression.value.arguments),
+              ]),
+            ),
+            Doc.line,
+            "=>",
+            Doc.indent(
+              Doc.concat([Doc.line, print(false, expression.value.body)])
+            ),
+          ])
+        )
+      );
     case "Variable":
       return expression.name;
     default:

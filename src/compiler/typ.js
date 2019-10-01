@@ -48,6 +48,24 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
   }
 }
 
+export function printImplicitTyps(names: string[]): Doc.t {
+  return Doc.group(
+    Doc.concat([
+      "{",
+      Doc.indent(
+        Doc.concat([
+          Doc.softline,
+          Doc.join(Doc.line, names),
+          Doc.line,
+          Doc.group(Doc.concat([":", Doc.line, "Type"])),
+        ])
+      ),
+      Doc.softline,
+      "}",
+    ])
+  );
+}
+
 export function print(typ: t): Doc.t {
   switch (typ.type) {
     case "Variable":
@@ -55,4 +73,16 @@ export function print(typ: t): Doc.t {
     default:
       return typ;
   }
+}
+
+export function printReturnTyp(typ: ?t, nextToken: Doc.t): Doc.t {
+  return Doc.group(
+    Doc.concat([
+      ...(typ
+        ? [":", Doc.line, print(typ), Doc.line]
+        : []
+      ),
+      nextToken,
+    ])
+  );
 }

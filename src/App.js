@@ -40,6 +40,9 @@ function basicTypes(n: number, m: number): string {
 
 const r = id(basicTypes(12, 23));
 
+const f = function<A> (x : A, y : A): bool {
+  return true;
+}
 `,
   };
 

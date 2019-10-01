@@ -3,18 +3,11 @@ import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
 import * as Expression from "./expression.js";
 import * as Monad from "./monad.js";
-import * as Statement from './statement';
 import * as Typ from "./typ.js";
-import * as Util from "./util.js";
-
-type Argument = {
-  name: string,
-  typ: Typ.t,
-};
 
 export type t = {
   type: "Definition",
-  arguments: Argument[],
+  arguments: Expression.FunArgument[],
   body: Expression.t,
   name: string,
   returnTyp: ?Typ.t,
@@ -33,34 +26,18 @@ function* extractIdentifierOfLVal(lval: BabelAst.LVal): Monad.t<BabelAst.Identif
 export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
   switch (declaration.type) {
     case "FunctionDeclaration": {
-      const returnTyp = declaration.returnType ? declaration.returnType.typeAnnotation : null;
+      const fun = yield* Expression.compileFun(declaration);
+      const name = declaration.id
+        ? declaration.id.name
+        : yield* Monad.raise<string>(declaration, "Expected named function");
 
       return [{
         type: "Definition",
-        arguments: yield* Monad.all(declaration.params.map(function*(param) {
-          switch (param.type) {
-            case "Identifier":
-                return {
-                  name: param.name,
-                  typ:
-                    param.typeAnnotation
-                      ? yield* Typ.compile(param.typeAnnotation.typeAnnotation)
-                      : yield* Monad.raise<Typ.t>(param, "Expected type annotation"),
-                };
-            default:
-              return yield* Monad.raise<Argument>(param, "Expected simple identifier as function parameter");
-          }
-        })),
-        body: yield* Statement.compile(declaration.body.body),
-        name:
-          declaration.id
-            ? declaration.id.name
-            : yield* Monad.raise<string>(declaration, "Expected named function"),
-        returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
-        typParameters:
-          declaration.typeParameters
-            ? Util.filterMap(declaration.typeParameters.params, param => param.name)
-            : [],
+        arguments: fun.arguments,
+        body: fun.body,
+        name,
+        returnTyp: fun.returnTyp,
+        typParameters: fun.typParameters,
       }];
     }
     case "VariableDeclaration":
@@ -95,23 +72,12 @@ export function print(declaration: t): Doc.t {
             Doc.concat(
               [
                 ...(declaration.typParameters.length !== 0
-                  ? [Doc.line, Doc.group(Doc.concat(["{", Doc.join(Doc.line, declaration.typParameters), "}"]))]
+                  ? [Doc.line, Typ.printImplicitTyps(declaration.typParameters)]
                   : []
                 ),
-                ...declaration.arguments.map(({name, typ}) =>
-                  Doc.concat([Doc.line, Doc.group(Doc.concat(["(", name, ":", Doc.line, Typ.print(typ), ")"]))])
-                ),
-                Doc.softline,
-                Doc.group(
-                  Doc.concat([
-                    ...(declaration.returnTyp
-                      ? [":", Doc.line, Typ.print(declaration.returnTyp)]
-                      : []
-                    ),
-                    Doc.line,
-                    ":=",
-                  ])
-                ),
+                Expression.printFunArguments(declaration.arguments),
+                Doc.line,
+                Typ.printReturnTyp(declaration.returnTyp, ":="),
                 Doc.hardline,
                 Expression.print(false, declaration.body),
                 "."
