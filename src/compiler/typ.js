@@ -23,6 +23,11 @@ function compileIdentifierOrQualifiedTypeIdentifier(
 
 export function* compileIfHandled(typ: BabelAst.FlowType): Monad.t<?t> {
   switch (typ.type) {
+    case "BooleanLiteralTypeAnnotation":
+      return yield* Monad.raise<?t>(
+        typ,
+        "Boolean literals in types are not handled",
+      );
     case "BooleanTypeAnnotation":
       return {
         type: "Variable",
@@ -43,6 +48,11 @@ export function* compileIfHandled(typ: BabelAst.FlowType): Monad.t<?t> {
         type: "Variable",
         name: "unit",
       };
+    case "NumberLiteralTypeAnnotation":
+      return yield* Monad.raise<?t>(
+        typ,
+        "Number literals in types are not handled",
+      );
     case "NumberTypeAnnotation":
       return {
         type: "Variable",

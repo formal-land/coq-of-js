@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`does not handle enums with other elements than strings 1`] = `
+"> 1 | type SayHi = \\"hi\\" | 'hello' | 12;
+    |                              ^^
+
+Only strings are handled in enums"
+`;
+
+exports[`does not handle other literals than string 1`] = `
+"> 1 | type Boo = false;
+    |           ^^^^^
+
+Boolean literals in types are not handled"
+`;
+
+exports[`does not handle other literals than string 2`] = `
+"> 1 | type Num = 12;
+    |           ^^
+
+Number literals in types are not handled"
+`;
+
 exports[`handle type definition of enums 1`] = `
 "Inductive SayHi : Type :=
 | hi
@@ -26,12 +47,4 @@ Definition f : Type := Z.
 Definition o : Type := unit.
 
 Definition e : Type := Empty_set."
-`;
-
-exports[`only handle enums of strings 1`] = `
-"> 1 | type SayHi = \\"hi\\" | 'hello' | 12;
-    |                              ^^
-  2 | 
-
-Only strings are handled in enums"
 `;

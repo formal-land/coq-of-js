@@ -5,7 +5,10 @@ import * as Error from "./error.js";
 import * as Monad from "./monad.js";
 import * as Program from "./program.js";
 
-export function compileAndPrint(jsInput: string, printWidth: number): string {
+export function compileAndPrint(
+  jsInput: string,
+  printWidth: number = 80,
+): string {
   const jsAst = parse(jsInput, {
     plugins: ["flow", "jsx"],
     sourceType: "module",
