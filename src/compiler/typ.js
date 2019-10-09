@@ -38,6 +38,19 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
         type: "Variable",
         name: "Z",
       };
+    case "ObjectTypeAnnotation": {
+      if (typ.properties.length === 0) {
+        return {
+          type: "Variable",
+          name: "unit",
+        };
+      }
+
+      return yield* Monad.raise<t>(
+        typ,
+        "Non-empty object types not handled yet",
+      );
+    }
     case "StringTypeAnnotation":
       return {
         type: "Variable",

@@ -2,17 +2,24 @@
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
 import * as Expression from "./expression.js";
+import * as Identifier from "./identifier.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 
-export type t = {
-  type: "Definition",
-  arguments: Expression.FunArgument[],
-  body: Expression.t,
-  name: string,
-  returnTyp: ?Typ.t,
-  typParameters: string[],
-};
+export type t =
+  | {
+      type: "Definition",
+      arguments: Expression.FunArgument[],
+      body: Expression.t,
+      name: string,
+      returnTyp: ?Typ.t,
+      typParameters: string[],
+    }
+  | {
+      type: "TypeAlias",
+      name: string,
+      typ: Typ.t,
+    };
 
 function* extractIdentifierOfLVal(
   lval: BabelAst.LVal,
@@ -30,6 +37,16 @@ function* extractIdentifierOfLVal(
 
 export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
   switch (declaration.type) {
+    case "ImportDeclaration": {
+      if (declaration.source.value === "react") {
+        return [];
+      }
+
+      return yield* Monad.raise<t[]>(
+        declaration,
+        "Only handle imports from React for now",
+      );
+    }
     case "FunctionDeclaration": {
       const fun = yield* Expression.compileFun(declaration);
       const name = declaration.id
@@ -47,6 +64,14 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
         },
       ];
     }
+    case "TypeAlias":
+      return [
+        {
+          type: "TypeAlias",
+          name: Identifier.compile(declaration.id),
+          typ: yield* Typ.compile(declaration.right),
+        },
+      ];
     case "VariableDeclaration":
       return yield* Monad.all(
         declaration.declarations.map(function*(declaration) {
@@ -94,6 +119,25 @@ export function print(declaration: t): Doc.t {
               ".",
             ]),
           ),
+        ]),
+      );
+    case "TypeAlias":
+      return Doc.group(
+        Doc.concat([
+          Doc.group(
+            Doc.concat([
+              "Definition",
+              Doc.line,
+              declaration.name,
+              Doc.line,
+              ":",
+              Doc.line,
+              "Type",
+              Doc.line,
+              ":=",
+            ]),
+          ),
+          Doc.indent(Doc.concat([Doc.line, Typ.print(declaration.typ), "."])),
         ]),
       );
     default:
