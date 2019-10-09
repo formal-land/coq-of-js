@@ -1,5 +1,17 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`handle type definition of enums 1`] = `
+"Inductive SayHi : Type :=
+| hi
+| hello
+| h."
+`;
+
+exports[`handle type definition of enums 2`] = `
+"Inductive Single : Type :=
+| s."
+`;
+
 exports[`handle type synonyms of constants 1`] = `
 "Definition b : Type := bool.
 
@@ -11,5 +23,15 @@ Definition n : Type := unit.
 
 Definition f : Type := Z.
 
-Definition o : Type := unit."
+Definition o : Type := unit.
+
+Definition e : Type := Empty_set."
+`;
+
+exports[`only handle enums of strings 1`] = `
+"> 1 | type SayHi = \\"hi\\" | 'hello' | 12;
+    |                              ^^
+  2 | 
+
+Only strings are handled in enums"
 `;

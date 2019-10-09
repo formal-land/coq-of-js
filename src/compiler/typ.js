@@ -21,12 +21,17 @@ function compileIdentifierOrQualifiedTypeIdentifier(
   }
 }
 
-export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
+export function* compileIfHandled(typ: BabelAst.FlowType): Monad.t<?t> {
   switch (typ.type) {
     case "BooleanTypeAnnotation":
       return {
         type: "Variable",
         name: "bool",
+      };
+    case "EmptyTypeAnnotation":
+      return {
+        type: "Variable",
+        name: "Empty_set",
       };
     case "GenericTypeAnnotation":
       return {
@@ -67,8 +72,14 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
         name: "unit",
       };
     default:
-      return yield* Monad.raiseUnhandled<t>(typ);
+      return null;
   }
+}
+
+export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
+  return (
+    (yield* compileIfHandled(typ)) || (yield* Monad.raiseUnhandled<t>(typ))
+  );
 }
 
 export function printImplicitTyps(names: string[]): Doc.t {
