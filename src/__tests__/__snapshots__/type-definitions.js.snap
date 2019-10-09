@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`handle type synonyms of constants 1`] = `
+"Definition b : Type := bool.
+
+Definition s : Type := string.
+
+Definition v : Type := unit.
+
+Definition n : Type := unit.
+
+Definition f : Type := Z.
+
+Definition o : Type := unit."
+`;

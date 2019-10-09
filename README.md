@@ -1,7 +1,7 @@
 # coq-of-js
 > Import JavaScript programs to Coq. Prove all the things! 🐓
 
-The aim of this project is to import JavaScript programs to the [Coq](https://coq.inria.fr/) language, to enable [formal verification](https://en.wikipedia.org/wiki/Formal_verification) for the most popular language of today.
+The aim of this project is to import JavaScript programs to the [Coq](https://coq.inria.fr/) language, to do [formal verification](https://en.wikipedia.org/wiki/Formal_verification) on JavaScript code.
 
 **Still under heavy development!**
 

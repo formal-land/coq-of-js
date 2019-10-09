@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`handle basics 1`] = `
+"Definition b : bool :=
+  false && true.
+
+Definition n : Z :=
+  (- 12) + 23.
+
+Definition s :=
+  \\"hi\\".
+
+Definition a :=
+  [ 1, (2 : Z), 3 ].
+
+Definition cond :=
+  if b then \\"a\\" else \\"b\\".
+
+Definition id
+  {A B : Type}
+  (x : A)
+  : A :=
+  x.
+
+Definition basicTypes
+  (n : Z)
+  (m : Z)
+  : string :=
+  \\"OK\\".
+
+Definition r :=
+  id (basicTypes 12 23).
+
+Definition f :=
+  fun {A : Type} (x : A) (y : A) =>
+    true.
+
+Definition arrow :=
+  fun x => x + 1."
+`;
