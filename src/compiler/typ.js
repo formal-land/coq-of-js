@@ -33,6 +33,11 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
         type: "Variable",
         name: compileIdentifierOrQualifiedTypeIdentifier(typ.id),
       };
+    case "NullLiteralTypeAnnotation":
+      return {
+        type: "Variable",
+        name: "unit",
+      };
     case "NumberTypeAnnotation":
       return {
         type: "Variable",
@@ -55,6 +60,11 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
       return {
         type: "Variable",
         name: "string",
+      };
+    case "VoidTypeAnnotation":
+      return {
+        type: "Variable",
+        name: "unit",
       };
     default:
       return yield* Monad.raiseUnhandled<t>(typ);
