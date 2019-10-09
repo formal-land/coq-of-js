@@ -17,8 +17,7 @@ type State = {
 
 export default class App extends PureComponent<Props, State> {
   state: State = {
-    jsInput:
-      `// Some examples
+    jsInput: `// Some examples
 
 const
   b: boolean = false && true,
@@ -55,11 +54,8 @@ const arrow = x => x + 1;
   getJsAst(jsInput: string): any | string {
     try {
       const ast = parse(jsInput, {
-        plugins: [
-          'flow',
-          'jsx',
-        ],
-        sourceType: 'module',
+        plugins: ["flow", "jsx"],
+        sourceType: "module",
       });
 
       return ast;
@@ -67,7 +63,11 @@ const arrow = x => x + 1;
       const {loc} = error;
 
       if (loc) {
-        return `${error.message}\n\n${codeFrame(jsInput, loc.line, loc.column)}`;
+        return `${error.message}\n\n${codeFrame(
+          jsInput,
+          loc.line,
+          loc.column,
+        )}`;
       }
     }
   }
@@ -90,14 +90,19 @@ const arrow = x => x + 1;
   }
 
   getCoqString(coqAst: Program.t): string {
-    return doc.printer.printDocToString(Program.print(coqAst), {printWidth: 40, tabWidth: 2}).formatted;
+    return doc.printer.printDocToString(Program.print(coqAst), {
+      printWidth: 40,
+      tabWidth: 2,
+    }).formatted;
   }
 
   render() {
     const {jsInput} = this.state;
     const jsAst = this.getJsAst(jsInput);
-    const coqAst = typeof jsAst !== "string" ? this.getCoqAst(jsInput, jsAst) : "";
-    const coqString = typeof coqAst !== "string" ? this.getCoqString(coqAst) : "";
+    const coqAst =
+      typeof jsAst !== "string" ? this.getCoqAst(jsInput, jsAst) : "";
+    const coqString =
+      typeof coqAst !== "string" ? this.getCoqString(coqAst) : "";
 
     return (
       <div>

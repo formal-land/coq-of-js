@@ -9,7 +9,7 @@ export type t = {
 };
 
 function compileIdentifierOrQualifiedTypeIdentifier(
-  id: BabelAst.Identifier | BabelAst.QualifiedTypeIdentifier
+  id: BabelAst.Identifier | BabelAst.QualifiedTypeIdentifier,
 ): string {
   switch (id.type) {
     case "Identifier":
@@ -58,11 +58,11 @@ export function printImplicitTyps(names: string[]): Doc.t {
           Doc.join(Doc.line, names),
           Doc.line,
           Doc.group(Doc.concat([":", Doc.line, "Type"])),
-        ])
+        ]),
       ),
       Doc.softline,
       "}",
-    ])
+    ]),
   );
 }
 
@@ -78,11 +78,8 @@ export function print(typ: t): Doc.t {
 export function printReturnTyp(typ: ?t, nextToken: Doc.t): Doc.t {
   return Doc.group(
     Doc.concat([
-      ...(typ
-        ? [":", Doc.line, print(typ), Doc.line]
-        : []
-      ),
+      ...(typ ? [":", Doc.line, print(typ), Doc.line] : []),
       nextToken,
-    ])
+    ]),
   );
 }

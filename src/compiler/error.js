@@ -8,9 +8,11 @@ export type t = {
 };
 
 export function print(source: string, errors: t[]): string {
-  return errors.map(error => {
-    const errorSourceCode = codeFrameColumns(source, error.location);
+  return errors
+    .map(error => {
+      const errorSourceCode = codeFrameColumns(source, error.location);
 
-    return `${errorSourceCode}\n\n${error.message}`;
-  }).join("\n\n**********************\n\n");
+      return `${errorSourceCode}\n\n${error.message}`;
+    })
+    .join("\n\n**********************\n\n");
 }
