@@ -5,6 +5,7 @@ import * as Expression from "./expression.js";
 import * as Identifier from "./identifier.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
+import * as TypDefinition from "./typ-definition.js";
 
 export type t =
   | {
@@ -16,9 +17,9 @@ export type t =
       typParameters: string[],
     }
   | {
-      type: "TypeAlias",
+      type: "TypeDefinition",
       name: string,
-      typ: Typ.t,
+      typDefinition: TypDefinition.t,
     };
 
 function* extractIdentifierOfLVal(
@@ -67,9 +68,9 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
     case "TypeAlias":
       return [
         {
-          type: "TypeAlias",
+          type: "TypeDefinition",
           name: Identifier.compile(declaration.id),
-          typ: yield* Typ.compile(declaration.right),
+          typDefinition: yield* TypDefinition.compile(declaration.right),
         },
       ];
     case "VariableDeclaration":
@@ -121,25 +122,8 @@ export function print(declaration: t): Doc.t {
           ),
         ]),
       );
-    case "TypeAlias":
-      return Doc.group(
-        Doc.concat([
-          Doc.group(
-            Doc.concat([
-              "Definition",
-              Doc.line,
-              declaration.name,
-              Doc.line,
-              ":",
-              Doc.line,
-              "Type",
-              Doc.line,
-              ":=",
-            ]),
-          ),
-          Doc.indent(Doc.concat([Doc.line, Typ.print(declaration.typ), "."])),
-        ]),
-      );
+    case "TypeDefinition":
+      return TypDefinition.print(declaration.name, declaration.typDefinition);
     default:
       return declaration;
   }
