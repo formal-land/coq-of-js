@@ -1,13 +1,15 @@
 // @flow
 import * as Error from "./error.js";
 
-export type t<A> = {
-  type: "Error",
-  errors: Error.t[],
-} | {
-  type: "Success",
-  value: A,
-};
+export type t<A> =
+  | {
+      type: "Error",
+      errors: Error.t[],
+    }
+  | {
+      type: "Success",
+      value: A,
+    };
 
 export function merge<A>(results: t<A>[]): t<A[]> {
   return results.reduce(

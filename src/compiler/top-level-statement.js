@@ -14,12 +14,17 @@ export type t = {
   typParameters: string[],
 };
 
-function* extractIdentifierOfLVal(lval: BabelAst.LVal): Monad.t<BabelAst.Identifier> {
+function* extractIdentifierOfLVal(
+  lval: BabelAst.LVal,
+): Monad.t<BabelAst.Identifier> {
   switch (lval.type) {
     case "Identifier":
       return lval;
     default:
-      return yield* Monad.raise<BabelAst.Identifier>(lval, "Expected simple identifier");
+      return yield* Monad.raise<BabelAst.Identifier>(
+        lval,
+        "Expected simple identifier",
+      );
   }
 }
 
@@ -31,32 +36,40 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
         ? declaration.id.name
         : yield* Monad.raise<string>(declaration, "Expected named function");
 
-      return [{
-        type: "Definition",
-        arguments: fun.arguments,
-        body: fun.body,
-        name,
-        returnTyp: fun.returnTyp,
-        typParameters: fun.typParameters,
-      }];
+      return [
+        {
+          type: "Definition",
+          arguments: fun.arguments,
+          body: fun.body,
+          name,
+          returnTyp: fun.returnTyp,
+          typParameters: fun.typParameters,
+        },
+      ];
     }
     case "VariableDeclaration":
-      return yield* Monad.all(declaration.declarations.map(function*(declaration) {
-        const id = yield* extractIdentifierOfLVal(declaration.id);
-        const returnTyp = id.typeAnnotation ? id.typeAnnotation.typeAnnotation : null;
+      return yield* Monad.all(
+        declaration.declarations.map(function*(declaration) {
+          const id = yield* extractIdentifierOfLVal(declaration.id);
+          const returnTyp = id.typeAnnotation
+            ? id.typeAnnotation.typeAnnotation
+            : null;
 
-        return {
-          type: "Definition",
-          arguments: [],
-          body:
-            declaration.init
+          return {
+            type: "Definition",
+            arguments: [],
+            body: declaration.init
               ? yield* Expression.compile(declaration.init)
-              : yield* Monad.raise<Expression.t>(declaration, "Expected definition"),
-          name: id.name,
-          returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
-          typParameters: [],
-        };
-      }));
+              : yield* Monad.raise<Expression.t>(
+                  declaration,
+                  "Expected definition",
+                ),
+            name: id.name,
+            returnTyp: returnTyp && (yield* Typ.compile(returnTyp)),
+            typParameters: [],
+          };
+        }),
+      );
     default:
       return yield* Monad.raiseUnhandled<t[]>(declaration);
   }
@@ -65,27 +78,24 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
 export function print(declaration: t): Doc.t {
   switch (declaration.type) {
     case "Definition":
-      return Doc.group(Doc.concat(
-        [
+      return Doc.group(
+        Doc.concat([
           Doc.group(Doc.concat(["Definition", Doc.line, declaration.name])),
           Doc.indent(
-            Doc.concat(
-              [
-                ...(declaration.typParameters.length !== 0
-                  ? [Doc.line, Typ.printImplicitTyps(declaration.typParameters)]
-                  : []
-                ),
-                Expression.printFunArguments(declaration.arguments),
-                Doc.line,
-                Typ.printReturnTyp(declaration.returnTyp, ":="),
-                Doc.hardline,
-                Expression.print(false, declaration.body),
-                "."
-              ]
-            )
+            Doc.concat([
+              ...(declaration.typParameters.length !== 0
+                ? [Doc.line, Typ.printImplicitTyps(declaration.typParameters)]
+                : []),
+              Expression.printFunArguments(declaration.arguments),
+              Doc.line,
+              Typ.printReturnTyp(declaration.returnTyp, ":="),
+              Doc.hardline,
+              Expression.print(false, declaration.body),
+              ".",
+            ]),
           ),
-        ]
-      ));
+        ]),
+      );
     default:
       return declaration;
   }

@@ -12,11 +12,17 @@
     "build": "react-scripts build",
     "eject": "react-scripts eject",
     "flow": "flow",
+    "prettier": "prettier --write src/**/*.{js,json}",
+    "prettier-check": "prettier --check src/**/*.{js,json}",
     "start": "react-scripts start",
     "test": "react-scripts test"
   },
   "eslintConfig": {
     "extends": "react-app"
+  },
+  "prettier": {
+    "bracketSpacing": false,
+    "trailingComma": "all"
   },
   "browserslist": {
     "production": [

@@ -2,14 +2,16 @@
 import * as BabelAst from "./babel-ast.js";
 import * as Result from "./result.js";
 
-type Yield = {
-  type: "All",
-  expressions: Generator<Yield, any, any>[],
-} | {
-  type: "Raise",
-  message: string,
-  node: BabelAst.Node,
-};
+type Yield =
+  | {
+      type: "All",
+      expressions: Generator<Yield, any, any>[],
+    }
+  | {
+      type: "Raise",
+      message: string,
+      node: BabelAst.Node,
+    };
 
 export type t<A> = Generator<Yield, A, any>;
 
@@ -22,7 +24,10 @@ export function* raise<A>(node: BabelAst.Node, message: string): t<A> {
 }
 
 export function* raiseUnhandled<A>(node: BabelAst.Node): t<A> {
-  return yield* raise<A>(node, `Unhandled syntax:\n${JSON.stringify(node, null, 2)}`);
+  return yield* raise<A>(
+    node,
+    `Unhandled syntax:\n${JSON.stringify(node, null, 2)}`,
+  );
 }
 
 function runWithAnswer<A>(expression: t<A>, answer?: any): Result.t<any> {
@@ -38,12 +43,17 @@ function runWithAnswer<A>(expression: t<A>, answer?: any): Result.t<any> {
   const nextAnswer: Result.t<any> = (() => {
     switch (result.value.type) {
       case "All": {
-        const results = result.value.expressions.map(expression => runWithAnswer(expression));
+        const results = result.value.expressions.map(expression =>
+          runWithAnswer(expression),
+        );
 
         return Result.merge(results);
       }
       case "Raise": {
-        const error = {location: result.value.node.loc, message: result.value.message};
+        const error = {
+          location: result.value.node.loc,
+          message: result.value.message,
+        };
 
         return {type: "Error", errors: [error]};
       }
