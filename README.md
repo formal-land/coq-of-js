@@ -11,9 +11,10 @@ For now: a web-interface to do development, with four columns:
 * the JavaScript AST;
 * the Coq AST;
 * the Coq source.
+
 ```
-npm install
-npm start
+yarn install
+yarn start
 ```
 
 ## Todo
