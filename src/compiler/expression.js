@@ -73,7 +73,8 @@ export function* compileStatements(
 ): Monad.t<t> {
   if (statements.length === 0) {
     return tt;
-  } else if (statements.length === 1) {
+  }
+  if (statements.length === 1) {
     switch (statements[0].type) {
       case "ReturnStatement":
         return statements[0].argument
@@ -143,7 +144,7 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
                 if (element.type === "SpreadElement") {
                   return yield* Monad.raise<t>(
                     element,
-                    "Spread operator not handled",
+                    "Spreads in arrays are not handled",
                   );
                 }
 

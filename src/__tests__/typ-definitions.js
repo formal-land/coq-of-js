@@ -52,7 +52,7 @@ it("handles sum types", () => {
   | {
       type: "Success",
       fresh: boolean,
-      value: string,
+      "value": string,
     };`),
   ).toMatchSnapshot();
 
@@ -93,4 +93,22 @@ it("shows errors for sum types", () => {
       message: string,
     };`),
   ).toMatchSnapshot();
+
+  expect(
+    compileAndPrint(`type Status =
+  | {
+     type: "Spread",
+      ...A,
+    };`),
+  ).toMatchSnapshot();
+
+  expect(
+    compileAndPrint(`type Status =
+  | {
+     type: "Spread",
+    }
+  | string;`),
+  ).toMatchSnapshot();
+
+  expect(compileAndPrint(`type Status = number | string;`)).toMatchSnapshot();
 });

@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`can handle several errors 1`] = `
+"> 1 | const a1 = [,]; const a2 = [,];
+    |           ^^^
+
+Expected non-empty elements in the array
+
+**********************
+
+> 1 | const a1 = [,]; const a2 = [,];
+    |                           ^^^
+
+Expected non-empty elements in the array"
+`;

@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "react-scripts build",
+    "coverage": "react-scripts test --coverage --collect-coverage-from=src/compiler/**/*.js --watchAll=false",
     "eject": "react-scripts eject",
     "flow": "flow",
     "prettier": "prettier --write src/**/*.{js,json}",
