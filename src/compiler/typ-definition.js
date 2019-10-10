@@ -249,13 +249,14 @@ function printConstructorRecord(constructor: Constructor): Doc.t {
 export function print(name: string, typDefinition: t): Doc.t {
   switch (typDefinition.type) {
     case "Enum":
-      return Doc.group(
+      return printModule(
+        name,
         Doc.concat([
           Doc.group(
             Doc.concat([
               "Inductive",
               Doc.line,
-              name,
+              "t",
               Doc.line,
               ":",
               Doc.line,

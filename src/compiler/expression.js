@@ -32,6 +32,11 @@ export type t =
       value: boolean | number | string,
     }
   | {
+      type: "EnumInstance",
+      enum: string,
+      instance: string,
+    }
+  | {
       type: "FunctionExpression",
       // eslint-disable-next-line no-use-before-define
       value: Fun,
@@ -238,14 +243,29 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         type: "Constant",
         value: expression.value,
       };
-    case "TypeCastExpression":
-      return {
-        type: "TypeCastExpression",
-        expression: yield* compile(expression.expression),
-        typeAnnotation: yield* Typ.compile(
-          expression.typeAnnotation.typeAnnotation,
-        ),
-      };
+    case "TypeCastExpression": {
+      switch (expression.expression.type) {
+        case "StringLiteral": {
+          const {value} = expression.expression;
+
+          return {
+            type: "EnumInstance",
+            enum: yield* Typ.compileIdentifier(
+              expression.typeAnnotation.typeAnnotation,
+            ),
+            instance: value,
+          };
+        }
+        default:
+          return {
+            type: "TypeCastExpression",
+            expression: yield* compile(expression.expression),
+            typeAnnotation: yield* Typ.compile(
+              expression.typeAnnotation.typeAnnotation,
+            ),
+          };
+      }
+    }
     case "UnaryExpression":
       return {
         type: "UnaryExpression",
@@ -354,6 +374,8 @@ export function print(needParens: boolean, expression: t): Doc.t {
     }
     case "Constant":
       return JSON.stringify(expression.value);
+    case "EnumInstance":
+      return `${expression.enum}.${expression.instance}`;
     case "FunctionExpression":
       return Doc.paren(
         needParens,

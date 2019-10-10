@@ -38,6 +38,11 @@ exports[`handles empty objects 1`] = `
   tt."
 `;
 
+exports[`handles enum instances 1`] = `
+"Definition e :=
+  Kind.Green."
+`;
+
 exports[`handles nulls 1`] = `
 "Definition n :=
   tt."

@@ -32,3 +32,7 @@ it("handles empty objects", () => {
 it("does not handle non-objects without annotations", () => {
   expect(compileAndPrint(`const o = {x: 12};`)).toMatchSnapshot();
 });
+
+it("handles enum instances", () => {
+  expect(compileAndPrint(`const e = ("Green": Kind);`)).toMatchSnapshot();
+});
