@@ -46,6 +46,89 @@ function* getStringOfStringLiteralTypeAnnotation(
   }
 }
 
+function* compileStringEnum(typs: BabelAst.FlowType[]): Monad.t<t> {
+  const names = yield* Monad.all(
+    typs.map(function*(typ) {
+      switch (typ.type) {
+        case "StringLiteralTypeAnnotation":
+          return typ.value;
+        default:
+          return yield* Monad.raise<string>(
+            typ,
+            "Only strings are handled in enums",
+          );
+      }
+    }),
+  );
+
+  return {
+    type: "Enum",
+    names,
+  };
+}
+
+function* compileSumType(typs: BabelAst.FlowType[]): Monad.t<t> {
+  const constructors = yield* Monad.all(
+    typs.map(function*(typ) {
+      switch (typ.type) {
+        case "ObjectTypeAnnotation": {
+          const [nameProperties, fieldProperties] = yield* Monad.reduce(
+            typ.properties,
+            [[], []],
+            function*([nameProperties, fieldProperties], property) {
+              if (property.type !== "ObjectTypeProperty") {
+                return yield* Monad.raise<[*, *]>(
+                  property,
+                  "Expected a named property",
+                );
+              }
+
+              const name = getObjectTypePropertyName(property);
+
+              return name === "type"
+                ? [[...nameProperties, property], fieldProperties]
+                : [nameProperties, [...fieldProperties, property]];
+            },
+          );
+
+          if (nameProperties.length === 0) {
+            return yield* Monad.raise<Constructor>(
+              typ,
+              "Expected at least one field with the name `type`",
+            );
+          }
+
+          return {
+            name: yield* getStringOfStringLiteralTypeAnnotation(
+              nameProperties[0].value,
+            ),
+            fields: yield* Monad.all(
+              fieldProperties.map(function*(
+                property: BabelAst.ObjectTypeProperty,
+              ) {
+                return {
+                  name: getObjectTypePropertyName(property),
+                  typ: yield* Typ.compile(property.value),
+                };
+              }),
+            ),
+          };
+        }
+        default:
+          return yield* Monad.raise<Constructor>(
+            typ,
+            "Only objects are handled in sum types",
+          );
+      }
+    }),
+  );
+
+  return {
+    type: "Sum",
+    constructors,
+  };
+}
+
 export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
   const plainTyp = yield* Typ.compileIfHandled(typ);
 
@@ -57,11 +140,21 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
   }
 
   switch (typ.type) {
+    case "ObjectTypeAnnotation": {
+      const withATypeField = typ.properties.some(
+        property =>
+          property.type === "ObjectTypeProperty" &&
+          getObjectTypePropertyName(property) === "type",
+      );
+
+      if (withATypeField) {
+        return yield* compileSumType([typ]);
+      }
+
+      return yield* Monad.raise<t>(typ, "Object types are not handled yet");
+    }
     case "StringLiteralTypeAnnotation":
-      return {
-        type: "Enum",
-        names: [typ.value],
-      };
+      return yield* compileStringEnum([typ]);
     case "UnionTypeAnnotation": {
       if (typ.types.length === 0) {
         return {
@@ -74,87 +167,10 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
       }
 
       switch (typ.types[0].type) {
-        case "ObjectTypeAnnotation": {
-          const constructors = yield* Monad.all(
-            typ.types.map(function*(typ) {
-              switch (typ.type) {
-                case "ObjectTypeAnnotation": {
-                  const [nameProperties, fieldProperties] = yield* Monad.reduce(
-                    typ.properties,
-                    [[], []],
-                    function*([nameProperties, fieldProperties], property) {
-                      if (property.type !== "ObjectTypeProperty") {
-                        return yield* Monad.raise<[*, *]>(
-                          property,
-                          "Expected a named property",
-                        );
-                      }
-
-                      const name = getObjectTypePropertyName(property);
-
-                      return name === "type"
-                        ? [[...nameProperties, property], fieldProperties]
-                        : [nameProperties, [...fieldProperties, property]];
-                    },
-                  );
-
-                  if (nameProperties.length === 0) {
-                    return yield* Monad.raise<Constructor>(
-                      typ,
-                      "Expected at least one field with the name `type`",
-                    );
-                  }
-
-                  return {
-                    name: yield* getStringOfStringLiteralTypeAnnotation(
-                      nameProperties[0].value,
-                    ),
-                    fields: yield* Monad.all(
-                      fieldProperties.map(function*(
-                        property: BabelAst.ObjectTypeProperty,
-                      ) {
-                        return {
-                          name: getObjectTypePropertyName(property),
-                          typ: yield* Typ.compile(property.value),
-                        };
-                      }),
-                    ),
-                  };
-                }
-                default:
-                  return yield* Monad.raise<Constructor>(
-                    typ,
-                    "Only objects are handled in sum types",
-                  );
-              }
-            }),
-          );
-
-          return {
-            type: "Sum",
-            constructors,
-          };
-        }
-        case "StringLiteralTypeAnnotation": {
-          const names = yield* Monad.all(
-            typ.types.map(function*(typ) {
-              switch (typ.type) {
-                case "StringLiteralTypeAnnotation":
-                  return typ.value;
-                default:
-                  return yield* Monad.raise<string>(
-                    typ,
-                    "Only strings are handled in enums",
-                  );
-              }
-            }),
-          );
-
-          return {
-            type: "Enum",
-            names,
-          };
-        }
+        case "ObjectTypeAnnotation":
+          return yield* compileSumType(typ.types);
+        case "StringLiteralTypeAnnotation":
+          return yield* compileStringEnum(typ.types);
         default:
           return yield* Monad.raise<t>(
             typ,

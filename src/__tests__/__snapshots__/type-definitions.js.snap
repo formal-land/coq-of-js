@@ -44,6 +44,19 @@ exports[`handles sum types 1`] = `
 End Status."
 `;
 
+exports[`handles sum types 2`] = `
+"Module Status.
+  Module Error.
+    Record t := {
+      message : string;
+    }.
+  End Error.
+
+  Inductive t :=
+  | Error (_ : Error.t).
+End Status."
+`;
+
 exports[`handles type definition of enums 1`] = `
 "Inductive SayHi : Type :=
 | hi
@@ -95,4 +108,16 @@ exports[`shows errors for sum types 2`] = `
   8 |     };
 
 Expected a string literal"
+`;
+
+exports[`shows errors for sum types 3`] = `
+"  1 | type Status =
+> 2 |   | {
+    |    ^
+> 3 |       message: string,
+    | ^^^^^^^^^^^^^^^^^^^^^^
+> 4 |     };
+    | ^^^^^
+
+Object types are not handled yet"
 `;

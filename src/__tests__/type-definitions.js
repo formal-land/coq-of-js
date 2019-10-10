@@ -55,6 +55,14 @@ it("handles sum types", () => {
       value: string,
     };`),
   ).toMatchSnapshot();
+
+  expect(
+    compileAndPrint(`type Status =
+  | {
+      type: "Error",
+      message: string,
+    };`),
+  ).toMatchSnapshot();
 });
 
 it("shows errors for sum types", () => {
@@ -76,6 +84,13 @@ it("shows errors for sum types", () => {
     }
   | {
       type: number,
+    };`),
+  ).toMatchSnapshot();
+
+  expect(
+    compileAndPrint(`type Status =
+  | {
+      message: string,
     };`),
   ).toMatchSnapshot();
 });
