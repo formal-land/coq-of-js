@@ -18,6 +18,17 @@ type State = {
 export default class App extends PureComponent<Props, State> {
   state: State = {
     jsInput: `// Some examples
+type Status =
+  | {
+      type: "Error",
+      message: string,
+    }
+  | {
+      type: "Loading",
+    }
+  | {
+      type: "Nothing",
+    };
 
 const
   b: boolean = false && true,

@@ -1,7 +1,7 @@
 // @flow
 import {compileAndPrint} from "../compiler/index.js";
 
-it("handle basics", () => {
+it("handles basics", () => {
   expect(
     compileAndPrint(
       `// Some examples

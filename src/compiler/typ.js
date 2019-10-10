@@ -66,10 +66,7 @@ export function* compileIfHandled(typ: BabelAst.FlowType): Monad.t<?t> {
         };
       }
 
-      return yield* Monad.raise<t>(
-        typ,
-        "Non-empty object types not handled yet",
-      );
+      return null;
     }
     case "StringTypeAnnotation":
       return {

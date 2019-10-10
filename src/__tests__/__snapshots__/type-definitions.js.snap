@@ -21,19 +21,55 @@ exports[`does not handle other literals than string 2`] = `
 Number literals in types are not handled"
 `;
 
-exports[`handle type definition of enums 1`] = `
+exports[`handles sum types 1`] = `
+"Module Status.
+  Module Error.
+    Record t := {
+      message : string;
+    }.
+  End Error.
+
+  Module Success.
+    Record t := {
+      fresh : bool;
+      value : string;
+    }.
+  End Success.
+
+  Inductive t :=
+  | Error (_ : Error.t)
+  | Loading
+  | Nothing
+  | Success (_ : Success.t).
+End Status."
+`;
+
+exports[`handles sum types 2`] = `
+"Module Status.
+  Module Error.
+    Record t := {
+      message : string;
+    }.
+  End Error.
+
+  Inductive t :=
+  | Error (_ : Error.t).
+End Status."
+`;
+
+exports[`handles type definition of enums 1`] = `
 "Inductive SayHi : Type :=
 | hi
 | hello
 | h."
 `;
 
-exports[`handle type definition of enums 2`] = `
+exports[`handles type definition of enums 2`] = `
 "Inductive Single : Type :=
 | s."
 `;
 
-exports[`handle type synonyms of constants 1`] = `
+exports[`handles type synonyms of constants 1`] = `
 "Definition b : Type := bool.
 
 Definition s : Type := string.
@@ -47,4 +83,41 @@ Definition f : Type := Z.
 Definition o : Type := unit.
 
 Definition e : Type := Empty_set."
+`;
+
+exports[`shows errors for sum types 1`] = `
+"  1 | type Status =
+> 2 |   | {
+    |    ^
+> 3 |       message: string,
+    | ^^^^^^^^^^^^^^^^^^^^^^
+> 4 |     }
+    | ^^^^^
+  5 |   | {
+  6 |       type: \\"Loading\\",
+  7 |     };
+
+Expected at least one field with the name \`type\`"
+`;
+
+exports[`shows errors for sum types 2`] = `
+"  5 |     }
+  6 |   | {
+> 7 |       type: number,
+    |            ^^^^^^
+  8 |     };
+
+Expected a string literal"
+`;
+
+exports[`shows errors for sum types 3`] = `
+"  1 | type Status =
+> 2 |   | {
+    |    ^
+> 3 |       message: string,
+    | ^^^^^^^^^^^^^^^^^^^^^^
+> 4 |     };
+    | ^^^^^
+
+Object types are not handled yet"
 `;
