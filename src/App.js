@@ -18,6 +18,7 @@ type State = {
 export default class App extends PureComponent<Props, State> {
   state: State = {
     jsInput: `// Some examples
+
 type Status =
   | {
       type: "Error",

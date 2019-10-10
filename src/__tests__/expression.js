@@ -24,3 +24,11 @@ it("does not handle calls with spread parameters", () => {
 it("handles nulls", () => {
   expect(compileAndPrint(`const n = null;`)).toMatchSnapshot();
 });
+
+it("handles empty objects", () => {
+  expect(compileAndPrint(`const o = {};`)).toMatchSnapshot();
+});
+
+it("does not handle non-objects without annotations", () => {
+  expect(compileAndPrint(`const o = {x: 12};`)).toMatchSnapshot();
+});

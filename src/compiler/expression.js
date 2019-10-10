@@ -221,6 +221,16 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         type: "Constant",
         value: expression.value,
       };
+    case "ObjectExpression": {
+      if (expression.properties.length === 0) {
+        return tt;
+      }
+
+      return yield* Monad.raise<t>(
+        expression,
+        "Unhandled object expression without type annotation",
+      );
+    }
     case "ParenthesizedExpression":
       return yield* compile(expression.expression);
     case "StringLiteral":
