@@ -36,6 +36,25 @@ it("does not handle other literals than string", () => {
   expect(compileAndPrint(`type Num = 12;`)).toMatchSnapshot();
 });
 
+it("does handle records", () => {
+  expect(
+    compileAndPrint(`type Status = {
+      message: string,
+      quantity: number,
+    };`),
+  ).toMatchSnapshot();
+});
+
+it("does not handle records with spreads", () => {
+  expect(
+    compileAndPrint(`type Status = {
+      message: string,
+      quantity: number,
+      ...A,
+    };`),
+  ).toMatchSnapshot();
+});
+
 it("handles sum types", () => {
   expect(
     compileAndPrint(`type Status =
@@ -84,13 +103,6 @@ it("shows errors for sum types", () => {
     }
   | {
       type: number,
-    };`),
-  ).toMatchSnapshot();
-
-  expect(
-    compileAndPrint(`type Status =
-  | {
-      message: string,
     };`),
   ).toMatchSnapshot();
 
