@@ -38,16 +38,6 @@ function* extractIdentifierOfLVal(
 
 export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
   switch (declaration.type) {
-    case "ImportDeclaration": {
-      if (declaration.source.value === "react") {
-        return [];
-      }
-
-      return yield* Monad.raise<t[]>(
-        declaration,
-        "Only handle imports from React for now",
-      );
-    }
     case "FunctionDeclaration": {
       const fun = yield* Expression.compileFun(declaration);
       const name = declaration.id
@@ -64,6 +54,16 @@ export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
           typParameters: fun.typParameters,
         },
       ];
+    }
+    case "ImportDeclaration": {
+      if (declaration.source.value === "react") {
+        return [];
+      }
+
+      return yield* Monad.raise<t[]>(
+        declaration,
+        "Only handle imports from React for now",
+      );
     }
     case "TypeAlias":
       return [

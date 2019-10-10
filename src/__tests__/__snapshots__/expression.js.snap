@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`does not handle calls with spread parameters 1`] = `
+"> 1 | const n = f(...a);
+    |            ^^^^
+
+Unhandled function argument"
+`;
+
+exports[`does not handle empty elements in arrays 1`] = `
+"> 1 | const a = [,];
+    |          ^^^
+
+Expected non-empty elements in the array"
+`;
+
+exports[`does not handle spreads in arrays 1`] = `
+"> 1 | const a = [...[]];
+    |           ^^^^^
+
+Spreads in arrays are not handled"
+`;
+
+exports[`handles empty arrays 1`] = `
+"Definition a :=
+  []."
+`;
+
+exports[`handles nulls 1`] = `
+"Definition n :=
+  tt."
+`;
+
+exports[`requires function parameters to be simple names 1`] = `
+"> 1 | function foo({a}) {return a;}
+    |             ^^^
+
+Expected simple identifier as function parameter"
+`;

@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`does not handle destructuring of constants 1`] = `
+"> 1 | const [a, b] = [1, 2];
+    |      ^^^^^^
+
+Expected simple identifier"
+`;
+
+exports[`does not handle empty declarations 1`] = `
+"> 1 | let x;
+    |    ^
+
+Expected definition"
+`;
+
+exports[`does not handle non-React imports 1`] = `
+"> 1 | import express from \\"express\\";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Only handle imports from React for now"
+`;
+
+exports[`handles React import 1`] = `""`;

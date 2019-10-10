@@ -121,3 +121,29 @@ exports[`shows errors for sum types 3`] = `
 
 Object types are not handled yet"
 `;
+
+exports[`shows errors for sum types 4`] = `
+"  2 |   | {
+  3 |      type: \\"Spread\\",
+> 4 |       ...A,
+    |      ^^^^
+  5 |     };
+
+Expected a named property"
+`;
+
+exports[`shows errors for sum types 5`] = `
+"  3 |      type: \\"Spread\\",
+  4 |     }
+> 5 |   | string;
+    |    ^^^^^^
+
+Only objects are handled in sum types"
+`;
+
+exports[`shows errors for sum types 6`] = `
+"> 1 | type Status = number | string;
+    |              ^^^^^^^^^^^^^^^
+
+Only handle unions of strings or objects with a \`type\` field"
+`;
