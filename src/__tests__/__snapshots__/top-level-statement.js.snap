@@ -22,3 +22,8 @@ Only handle imports from React for now"
 `;
 
 exports[`handles React import 1`] = `""`;
+
+exports[`handles exports 1`] = `
+"Definition x :=
+  12."
+`;

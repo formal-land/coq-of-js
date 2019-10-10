@@ -14,6 +14,10 @@ export type t =
       names: string[],
     }
   | {
+      type: "Record",
+      fields: {name: string, typ: Typ.t}[],
+    }
+  | {
       type: "Sum",
       constructors: Constructor[],
     }
@@ -151,7 +155,23 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
         return yield* compileSumType([typ]);
       }
 
-      return yield* Monad.raise<t>(typ, "Object types are not handled yet");
+      const fields = yield* Monad.all(
+        typ.properties.map(function*(property) {
+          if (property.type !== "ObjectTypeProperty") {
+            return yield* Monad.raise(property, "Expected named property");
+          }
+
+          return {
+            name: getObjectTypePropertyName(property),
+            typ: yield* Typ.compile(property.value),
+          };
+        }),
+      );
+
+      return {
+        type: "Record",
+        fields,
+      };
     }
     case "StringLiteralTypeAnnotation":
       return yield* compileStringEnum([typ]);
@@ -193,32 +213,37 @@ function printModule(name: string, doc: Doc.t): Doc.t {
   );
 }
 
-function printConstructorRecord(constructor: Constructor): Doc.t {
-  return printModule(
-    constructor.name,
-    Doc.concat([
-      Doc.group(
-        Doc.concat(["Record", Doc.line, "t", Doc.line, ":=", Doc.line, "{"]),
-      ),
-      Doc.indent(
-        Doc.concat(
-          constructor.fields.map(({name, typ}) =>
-            Doc.concat([
-              Doc.hardline,
-              name,
-              Doc.line,
-              ":",
-              Doc.line,
-              Typ.print(typ),
-              ";",
-            ]),
-          ),
+function printRecord(
+  name: string,
+  fields: {name: string, typ: Typ.t}[],
+): Doc.t {
+  return Doc.concat([
+    Doc.group(
+      Doc.concat(["Record", Doc.line, "t", Doc.line, ":=", Doc.line, "{"]),
+    ),
+    Doc.indent(
+      Doc.concat(
+        fields.map(({name, typ}) =>
+          Doc.concat([
+            Doc.hardline,
+            name,
+            Doc.line,
+            ":",
+            Doc.line,
+            Typ.print(typ),
+            Doc.softline,
+            ";",
+          ]),
         ),
       ),
-      Doc.hardline,
-      "}.",
-    ]),
-  );
+    ),
+    Doc.hardline,
+    "}.",
+  ]);
+}
+
+function printConstructorRecord(constructor: Constructor): Doc.t {
+  return printModule(constructor.name, printRecord("t", constructor.fields));
 }
 
 export function print(name: string, typDefinition: t): Doc.t {
@@ -245,6 +270,8 @@ export function print(name: string, typDefinition: t): Doc.t {
           ".",
         ]),
       );
+    case "Record":
+      return printModule(name, printRecord("t", typDefinition.fields));
     case "Sum":
       return printModule(
         name,

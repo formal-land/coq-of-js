@@ -38,6 +38,10 @@ function* extractIdentifierOfLVal(
 
 export function* compile(declaration: BabelAst.Statement): Monad.t<t[]> {
   switch (declaration.type) {
+    case "ExportNamedDeclaration":
+      return declaration.declaration
+        ? yield* compile(declaration.declaration)
+        : yield* Monad.raise<t[]>(declaration, "Expected a declaration");
     case "FunctionDeclaration": {
       const fun = yield* Expression.compileFun(declaration);
       const name = declaration.id

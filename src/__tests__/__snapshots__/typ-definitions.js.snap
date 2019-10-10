@@ -1,5 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`does handle records 1`] = `
+"Module Status.
+  Record t := {
+    message : string;
+    quantity : Z;
+  }.
+End Status."
+`;
+
 exports[`does not handle enums with other elements than strings 1`] = `
 "> 1 | type SayHi = \\"hi\\" | 'hello' | 12;
     |                              ^^
@@ -19,6 +28,16 @@ exports[`does not handle other literals than string 2`] = `
     |           ^^
 
 Number literals in types are not handled"
+`;
+
+exports[`does not handle records with spreads 1`] = `
+"  2 |       message: string,
+  3 |       quantity: number,
+> 4 |       ...A,
+    |      ^^^^
+  5 |     };
+
+Expected named property"
 `;
 
 exports[`handles sum types 1`] = `
@@ -111,18 +130,6 @@ Expected a string literal"
 `;
 
 exports[`shows errors for sum types 3`] = `
-"  1 | type Status =
-> 2 |   | {
-    |    ^
-> 3 |       message: string,
-    | ^^^^^^^^^^^^^^^^^^^^^^
-> 4 |     };
-    | ^^^^^
-
-Object types are not handled yet"
-`;
-
-exports[`shows errors for sum types 4`] = `
 "  2 |   | {
   3 |      type: \\"Spread\\",
 > 4 |       ...A,
@@ -132,7 +139,7 @@ exports[`shows errors for sum types 4`] = `
 Expected a named property"
 `;
 
-exports[`shows errors for sum types 5`] = `
+exports[`shows errors for sum types 4`] = `
 "  3 |      type: \\"Spread\\",
   4 |     }
 > 5 |   | string;
@@ -141,7 +148,7 @@ exports[`shows errors for sum types 5`] = `
 Only objects are handled in sum types"
 `;
 
-exports[`shows errors for sum types 6`] = `
+exports[`shows errors for sum types 5`] = `
 "> 1 | type Status = number | string;
     |              ^^^^^^^^^^^^^^^
 
