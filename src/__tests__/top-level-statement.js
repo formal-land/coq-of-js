@@ -1,6 +1,10 @@
 // @flow
 import {compileAndPrint} from "../compiler/index.js";
 
+it("handles exports", () => {
+  expect(compileAndPrint(`export const x = 12;`)).toMatchSnapshot();
+});
+
 it("does not handle destructuring of constants", () => {
   expect(compileAndPrint(`const [a, b] = [1, 2];`)).toMatchSnapshot();
 });
