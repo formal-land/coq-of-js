@@ -1,8 +1,12 @@
 // @flow
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
+import * as Identifier from "./identifier.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
+import * as Util from "./util.js";
+
+type Constructor = {name: string, fields: {name: string, typ: Typ.t}[]};
 
 export type t =
   | {
@@ -10,9 +14,37 @@ export type t =
       names: string[],
     }
   | {
+      type: "Sum",
+      constructors: Constructor[],
+    }
+  | {
       type: "Synonym",
       typ: Typ.t,
     };
+
+function getObjectTypePropertyName(
+  property: BabelAst.ObjectTypeProperty,
+): string {
+  switch (property.key.type) {
+    case "Identifier":
+      return Identifier.compile(property.key);
+    case "StringLiteral":
+      return property.key.value;
+    default:
+      return property.key;
+  }
+}
+
+function* getStringOfStringLiteralTypeAnnotation(
+  typ: BabelAst.FlowType,
+): Monad.t<string> {
+  switch (typ.type) {
+    case "StringLiteralTypeAnnotation":
+      return typ.value;
+    default:
+      return yield* Monad.raise<string>(typ, "Expected a string literal");
+  }
+}
 
 export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
   const plainTyp = yield* Typ.compileIfHandled(typ);
@@ -31,28 +63,146 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
         names: [typ.value],
       };
     case "UnionTypeAnnotation": {
-      const names = yield* Monad.all(
-        typ.types.map(function*(typ) {
-          switch (typ.type) {
-            case "StringLiteralTypeAnnotation":
-              return typ.value;
-            default:
-              return yield* Monad.raise<string>(
-                typ,
-                "Only strings are handled in enums",
-              );
-          }
-        }),
-      );
+      if (typ.types.length === 0) {
+        return {
+          type: "Synonym",
+          typ: {
+            type: "Variable",
+            name: "Empty_set",
+          },
+        };
+      }
 
-      return {
-        type: "Enum",
-        names,
-      };
+      switch (typ.types[0].type) {
+        case "ObjectTypeAnnotation": {
+          const constructors = yield* Monad.all(
+            typ.types.map(function*(typ) {
+              switch (typ.type) {
+                case "ObjectTypeAnnotation": {
+                  const [nameProperties, fieldProperties] = yield* Monad.reduce(
+                    typ.properties,
+                    [[], []],
+                    function*([nameProperties, fieldProperties], property) {
+                      if (property.type !== "ObjectTypeProperty") {
+                        return yield* Monad.raise<[*, *]>(
+                          property,
+                          "Expected a named property",
+                        );
+                      }
+
+                      const name = getObjectTypePropertyName(property);
+
+                      return name === "type"
+                        ? [[...nameProperties, property], fieldProperties]
+                        : [nameProperties, [...fieldProperties, property]];
+                    },
+                  );
+
+                  if (nameProperties.length === 0) {
+                    return yield* Monad.raise<Constructor>(
+                      typ,
+                      "Expected at least one field with the name `type`",
+                    );
+                  }
+
+                  return {
+                    name: yield* getStringOfStringLiteralTypeAnnotation(
+                      nameProperties[0].value,
+                    ),
+                    fields: yield* Monad.all(
+                      fieldProperties.map(function*(
+                        property: BabelAst.ObjectTypeProperty,
+                      ) {
+                        return {
+                          name: getObjectTypePropertyName(property),
+                          typ: yield* Typ.compile(property.value),
+                        };
+                      }),
+                    ),
+                  };
+                }
+                default:
+                  return yield* Monad.raise<Constructor>(
+                    typ,
+                    "Only objects are handled in sum types",
+                  );
+              }
+            }),
+          );
+
+          return {
+            type: "Sum",
+            constructors,
+          };
+        }
+        case "StringLiteralTypeAnnotation": {
+          const names = yield* Monad.all(
+            typ.types.map(function*(typ) {
+              switch (typ.type) {
+                case "StringLiteralTypeAnnotation":
+                  return typ.value;
+                default:
+                  return yield* Monad.raise<string>(
+                    typ,
+                    "Only strings are handled in enums",
+                  );
+              }
+            }),
+          );
+
+          return {
+            type: "Enum",
+            names,
+          };
+        }
+        default:
+          return yield* Monad.raise<t>(
+            typ,
+            "Only handle unions of strings or objects with a `type` field",
+          );
+      }
     }
     default:
       return yield* Monad.raiseUnhandled<t>(typ);
   }
+}
+
+function printModule(name: string, doc: Doc.t): Doc.t {
+  return Doc.group(
+    Doc.concat([
+      Doc.group(Doc.concat(["Module", Doc.line, name, "."])),
+      Doc.indent(Doc.concat([Doc.hardline, doc])),
+      Doc.group(Doc.concat([Doc.hardline, "End", Doc.line, name, "."])),
+    ]),
+  );
+}
+
+function printConstructorRecord(constructor: Constructor): Doc.t {
+  return printModule(
+    constructor.name,
+    Doc.concat([
+      Doc.group(
+        Doc.concat(["Record", Doc.line, "t", Doc.line, ":=", Doc.line, "{"]),
+      ),
+      Doc.indent(
+        Doc.concat(
+          constructor.fields.map(({name, typ}) =>
+            Doc.concat([
+              Doc.hardline,
+              name,
+              Doc.line,
+              ":",
+              Doc.line,
+              Typ.print(typ),
+              ";",
+            ]),
+          ),
+        ),
+      ),
+      Doc.hardline,
+      "}.",
+    ]),
+  );
 }
 
 export function print(name: string, typDefinition: t): Doc.t {
@@ -77,6 +227,52 @@ export function print(name: string, typDefinition: t): Doc.t {
             Doc.group(Doc.concat([Doc.hardline, "|", Doc.line, name])),
           ),
           ".",
+        ]),
+      );
+    case "Sum":
+      return printModule(
+        name,
+        Doc.concat([
+          Doc.join(Doc.concat([Doc.hardline, Doc.hardline]), [
+            ...Util.filterMap(typDefinition.constructors, constructor =>
+              constructor.fields.length !== 0
+                ? printConstructorRecord(constructor)
+                : null,
+            ),
+            Doc.group(
+              Doc.concat([
+                Doc.group(
+                  Doc.concat(["Inductive", Doc.line, "t", Doc.line, ":="]),
+                ),
+                ...typDefinition.constructors.map(({name, fields}) =>
+                  Doc.group(
+                    Doc.concat([
+                      Doc.hardline,
+                      "|",
+                      Doc.line,
+                      name,
+                      ...(fields.length !== 0
+                        ? [
+                            Doc.line,
+                            "(",
+                            Doc.softline,
+                            "_",
+                            Doc.line,
+                            ":",
+                            Doc.line,
+                            name,
+                            ".t",
+                            Doc.softline,
+                            ")",
+                          ]
+                        : []),
+                    ]),
+                  ),
+                ),
+                ".",
+              ]),
+            ),
+          ]),
         ]),
       );
     case "Synonym":

@@ -15,8 +15,23 @@ type Yield =
 
 export type t<A> = Generator<Yield, A, any>;
 
+// eslint-disable-next-line require-yield
+export function* ret<A>(value: A): t<A> {
+  return value;
+}
+
 export function* all<A>(expressions: t<A>[]): t<A[]> {
   return yield {type: "All", expressions};
+}
+
+export function reduce<Accumulator, A>(
+  array: A[],
+  accumulator: Accumulator,
+  reducer: (accumulator: Accumulator, element: A) => t<Accumulator>,
+): t<Accumulator> {
+  return array.reduce(function*(accumulator, element) {
+    return yield* reducer(yield* accumulator, element);
+  }, ret(accumulator));
 }
 
 export function* raise<A>(node: BabelAst.Node, message: string): t<A> {

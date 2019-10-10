@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`handle basics 1`] = `
+exports[`handles basics 1`] = `
 "Definition b : bool :=
   false && true.
 
