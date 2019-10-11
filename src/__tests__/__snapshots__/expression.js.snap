@@ -14,6 +14,41 @@ exports[`does not handle empty elements in arrays 1`] = `
 Expected non-empty elements in the array"
 `;
 
+exports[`does not handle non-empty objects without annotations 1`] = `
+"> 1 | const o = {x: 12};
+    |          ^^^^^^^
+
+Unhandled object expression without type annotation"
+`;
+
+exports[`does not handle records with computed property names 1`] = `
+"> 1 | const o = ({[a]: \\"hi\\"}: Rec);
+    |             ^
+
+Unhandled computed property name"
+`;
+
+exports[`does not handle records with methods 1`] = `
+"> 1 | const o = ({foo() {}}: Rec);
+    |            ^^^^^^^^
+
+Expected a named property"
+`;
+
+exports[`does not handle records with numeric names 1`] = `
+"> 1 | const o = ({12: \\"hi\\"}: Rec);
+    |            ^^^^^^^^
+
+Expected a plain string as identifier"
+`;
+
+exports[`does not handle records with spreads 1`] = `
+"> 1 | const o = ({...rec}: Rec);
+    |            ^^^^^^
+
+Expected a named property"
+`;
+
 exports[`does not handle spreads in arrays 1`] = `
 "> 1 | const a = [...[]];
     |           ^^^^^
@@ -21,14 +56,46 @@ exports[`does not handle spreads in arrays 1`] = `
 Spreads in arrays are not handled"
 `;
 
+exports[`expects \`type\` fields to be literal strings 1`] = `
+"> 1 | const o = ({type: 12}: Status);
+    |                  ^^
+
+Expected a string literal"
+`;
+
 exports[`handles empty arrays 1`] = `
 "Definition a :=
   []."
 `;
 
+exports[`handles empty objects 1`] = `
+"Definition o :=
+  tt."
+`;
+
+exports[`handles enum instances 1`] = `
+"Definition e :=
+  Kind.Green."
+`;
+
 exports[`handles nulls 1`] = `
 "Definition n :=
   tt."
+`;
+
+exports[`handles record instances 1`] = `
+"Definition o :=
+  {| Rec.a := \\"hi\\"; Rec.b := 12; |}."
+`;
+
+exports[`handles sum types 1`] = `
+"Definition o :=
+  Status.Foo {| Status.Foo.a := 12; |}."
+`;
+
+exports[`handles sum types without parameters 1`] = `
+"Definition o :=
+  Status.Foo."
 `;
 
 exports[`requires function parameters to be simple names 1`] = `

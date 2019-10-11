@@ -1,6 +1,7 @@
 // @flow
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
+import * as Identifier from "./identifier.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 import * as Util from "./util.js";
@@ -32,9 +33,27 @@ export type t =
       value: boolean | number | string,
     }
   | {
+      type: "EnumInstance",
+      enum: string,
+      instance: string,
+    }
+  | {
       type: "FunctionExpression",
       // eslint-disable-next-line no-use-before-define
       value: Fun,
+    }
+  | {
+      type: "RecordInstance",
+      // eslint-disable-next-line no-use-before-define
+      fields: RecordField[],
+      record: string,
+    }
+  | {
+      type: "SumInstance",
+      constr: string,
+      // eslint-disable-next-line no-use-before-define
+      fields: RecordField[],
+      sum: string,
     }
   | {
       type: "TypeCastExpression",
@@ -61,6 +80,11 @@ export type Fun = {
   body: t,
   returnTyp: ?Typ.t,
   typParameters: string[],
+};
+
+type RecordField = {
+  name: string,
+  value: t,
 };
 
 export const tt: t = {
@@ -124,6 +148,36 @@ export function* compileFun(
       ? Util.filterMap(fun.typeParameters.params, param => param.name)
       : [],
   };
+}
+
+function* getObjectPropertyName(
+  property: BabelAst.ObjectProperty,
+): Monad.t<string> {
+  switch (property.key.type) {
+    case "Identifier":
+      return Identifier.compile(property.key);
+    case "StringLiteral":
+      return property.key.value;
+    default:
+      return yield* Monad.raise<string>(
+        property,
+        "Expected a plain string as identifier",
+      );
+  }
+}
+
+function* getStringOfStringLiteral(
+  expression: BabelAst.Expression,
+): Monad.t<string> {
+  switch (expression.type) {
+    case "StringLiteral":
+      return expression.value;
+    default:
+      return yield* Monad.raise<string>(
+        expression,
+        "Expected a string literal",
+      );
+  }
 }
 
 export function* compile(expression: BabelAst.Expression): Monad.t<t> {
@@ -221,6 +275,16 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         type: "Constant",
         value: expression.value,
       };
+    case "ObjectExpression": {
+      if (expression.properties.length === 0) {
+        return tt;
+      }
+
+      return yield* Monad.raise<t>(
+        expression,
+        "Unhandled object expression without type annotation",
+      );
+    }
     case "ParenthesizedExpression":
       return yield* compile(expression.expression);
     case "StringLiteral":
@@ -228,14 +292,76 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         type: "Constant",
         value: expression.value,
       };
-    case "TypeCastExpression":
-      return {
-        type: "TypeCastExpression",
-        expression: yield* compile(expression.expression),
-        typeAnnotation: yield* Typ.compile(
-          expression.typeAnnotation.typeAnnotation,
-        ),
-      };
+    case "TypeCastExpression": {
+      switch (expression.expression.type) {
+        case "ObjectExpression": {
+          const [names, fields] = yield* Monad.reduce(
+            expression.expression.properties,
+            [[], []],
+            function*([names, fields], property) {
+              if (property.type !== "ObjectProperty") {
+                return yield* Monad.raise<[*, *]>(
+                  property,
+                  "Expected a named property",
+                );
+              }
+
+              if (property.computed) {
+                return yield* Monad.raise<[*, *]>(
+                  property.key,
+                  "Unhandled computed property name",
+                );
+              }
+
+              const name = yield* getObjectPropertyName(property);
+              // Because this seems to be the case here and for
+              // performance reasons for the type checking.
+              const value: BabelAst.Expression = (property.value: any);
+
+              if (name === "type") {
+                return [
+                  [...names, yield* getStringOfStringLiteral(value)],
+                  fields,
+                ];
+              }
+
+              return [names, [...fields, {name, value: yield* compile(value)}]];
+            },
+          );
+          const typName = yield* Typ.compileIdentifier(
+            expression.typeAnnotation.typeAnnotation,
+          );
+
+          return names.length === 0
+            ? {type: "RecordInstance", record: typName, fields}
+            : {
+                type: "SumInstance",
+                constr: names[0],
+                fields,
+                sum: typName,
+              };
+        }
+        case "StringLiteral": {
+          const {value} = expression.expression;
+
+          return {
+            type: "EnumInstance",
+            enum: yield* Typ.compileIdentifier(
+              expression.typeAnnotation.typeAnnotation,
+            ),
+            instance: value,
+          };
+        }
+        default:
+          return {
+            type: "TypeCastExpression",
+            expression: yield* compile(expression.expression),
+            typeAnnotation: yield* Typ.compile(
+              expression.typeAnnotation.typeAnnotation,
+            ),
+          };
+      }
+    }
     case "UnaryExpression":
       return {
         type: "UnaryExpression",
@@ -267,6 +393,31 @@ export function printFunArguments(funArguments: FunArgument[]): Doc.t {
           : name,
       ]),
     ),
+  );
+}
+
+function printRecordInstance(record: string, fields: RecordField[]): Doc.t {
+  return Doc.group(
+    Doc.concat([
+      "{|",
+      Doc.indent(
+        Doc.concat(
+          fields.map(({name, value}) =>
+            Doc.concat([
+              Doc.line,
+              Doc.group(
+                Doc.concat([
+                  Doc.group(Doc.concat([`${record}.${name}`, Doc.line, ":="])),
+                  Doc.indent(Doc.concat([Doc.line, print(false, value), ";"])),
+                ]),
+              ),
+            ]),
+          ),
+        ),
+      ),
+      Doc.line,
+      "|}",
+    ]),
   );
 }
 
@@ -344,6 +495,8 @@ export function print(needParens: boolean, expression: t): Doc.t {
     }
     case "Constant":
       return JSON.stringify(expression.value);
+    case "EnumInstance":
+      return `${expression.enum}.${expression.instance}`;
     case "FunctionExpression":
       return Doc.paren(
         needParens,
@@ -373,6 +526,26 @@ export function print(needParens: boolean, expression: t): Doc.t {
           ]),
         ),
       );
+    case "RecordInstance":
+      return printRecordInstance(expression.record, expression.fields);
+    case "SumInstance": {
+      const name = `${expression.sum}.${expression.constr}`;
+
+      if (expression.fields.length === 0) {
+        return name;
+      }
+
+      return Doc.paren(
+        needParens,
+        Doc.group(
+          Doc.concat([
+            name,
+            Doc.line,
+            printRecordInstance(name, expression.fields),
+          ]),
+        ),
+      );
+    }
     case "TypeCastExpression":
       return Doc.group(
         Doc.concat([
