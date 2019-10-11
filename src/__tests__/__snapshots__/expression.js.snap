@@ -1,106 +1,106 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`does not handle calls with spread parameters 1`] = `
-"> 1 | const n = f(...a);
-    |            ^^^^
-
-Unhandled function argument"
-`;
-
-exports[`does not handle empty elements in arrays 1`] = `
+exports[`arrays does not handle empty elements 1`] = `
 "> 1 | const a = [,];
     |          ^^^
 
 Expected non-empty elements in the array"
 `;
 
-exports[`does not handle non-empty objects without annotations 1`] = `
-"> 1 | const o = {x: 12};
-    |          ^^^^^^^
-
-Unhandled object expression without type annotation"
-`;
-
-exports[`does not handle records with computed property names 1`] = `
-"> 1 | const o = ({[a]: \\"hi\\"}: Rec);
-    |             ^
-
-Unhandled computed property name"
-`;
-
-exports[`does not handle records with methods 1`] = `
-"> 1 | const o = ({foo() {}}: Rec);
-    |            ^^^^^^^^
-
-Expected a named property"
-`;
-
-exports[`does not handle records with numeric names 1`] = `
-"> 1 | const o = ({12: \\"hi\\"}: Rec);
-    |            ^^^^^^^^
-
-Expected a plain string as identifier"
-`;
-
-exports[`does not handle records with spreads 1`] = `
-"> 1 | const o = ({...rec}: Rec);
-    |            ^^^^^^
-
-Expected a named property"
-`;
-
-exports[`does not handle spreads in arrays 1`] = `
+exports[`arrays does not handle spreads 1`] = `
 "> 1 | const a = [...[]];
     |           ^^^^^
 
 Spreads in arrays are not handled"
 `;
 
-exports[`expects \`type\` fields to be literal strings 1`] = `
+exports[`arrays handles empty arrays 1`] = `
+"Definition a :=
+  []."
+`;
+
+exports[`enums handles enums 1`] = `
+"Definition e :=
+  Kind.Green."
+`;
+
+exports[`function calls does not handle spread parameters 1`] = `
+"> 1 | const n = f(...a);
+    |            ^^^^
+
+Unhandled function argument"
+`;
+
+exports[`function definitions requires function parameters to be simple names 1`] = `
+"> 1 | function foo({a}) {return a;}
+    |             ^^^
+
+Expected simple identifier as function parameter"
+`;
+
+exports[`nulls handles nulls 1`] = `
+"Definition n :=
+  tt."
+`;
+
+exports[`objects as records does not handle non-empty objects without annotations 1`] = `
+"> 1 | const o = {x: 12};
+    |          ^^^^^^^
+
+Unhandled object expression without type annotation"
+`;
+
+exports[`objects as records does not handle records with computed property names 1`] = `
+"> 1 | const o = ({[a]: \\"hi\\"}: Rec);
+    |             ^
+
+Unhandled computed property name"
+`;
+
+exports[`objects as records does not handle records with methods 1`] = `
+"> 1 | const o = ({foo() {}}: Rec);
+    |            ^^^^^^^^
+
+Expected a named property"
+`;
+
+exports[`objects as records does not handle records with numeric names 1`] = `
+"> 1 | const o = ({12: \\"hi\\"}: Rec);
+    |            ^^^^^^^^
+
+Expected a plain string as identifier"
+`;
+
+exports[`objects as records does not handle records with spreads 1`] = `
+"> 1 | const o = ({...rec}: Rec);
+    |            ^^^^^^
+
+Expected a named property"
+`;
+
+exports[`objects as records handles empty objects 1`] = `
+"Definition o :=
+  tt."
+`;
+
+exports[`objects as records handles record instances 1`] = `
+"Definition o :=
+  {| Rec.a := \\"hi\\"; Rec.b := 12; |}."
+`;
+
+exports[`objects as sum types expects the \`type\` field to be a literal strings 1`] = `
 "> 1 | const o = ({type: 12}: Status);
     |                  ^^
 
 Expected a string literal"
 `;
 
-exports[`handles empty arrays 1`] = `
-"Definition a :=
-  []."
-`;
-
-exports[`handles empty objects 1`] = `
-"Definition o :=
-  tt."
-`;
-
-exports[`handles enum instances 1`] = `
-"Definition e :=
-  Kind.Green."
-`;
-
-exports[`handles nulls 1`] = `
-"Definition n :=
-  tt."
-`;
-
-exports[`handles record instances 1`] = `
-"Definition o :=
-  {| Rec.a := \\"hi\\"; Rec.b := 12; |}."
-`;
-
-exports[`handles sum types 1`] = `
+exports[`objects as sum types handles sum types 1`] = `
 "Definition o :=
   Status.Foo {| Status.Foo.a := 12; |}."
 `;
 
-exports[`handles sum types without parameters 1`] = `
+exports[`objects as sum types handles sum types without parameters 1`] = `
 "Definition o :=
   Status.Foo."
-`;
-
-exports[`requires function parameters to be simple names 1`] = `
-"> 1 | function foo({a}) {return a;}
-    |             ^^^
-
-Expected simple identifier as function parameter"
 `;

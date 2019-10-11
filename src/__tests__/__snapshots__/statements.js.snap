@@ -1,11 +1,104 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`handles empty returns 1`] = `
+exports[`definition of variables does not handle empty definitions 1`] = `
+"> 1 | function foo() {var x;}
+    |                    ^
+
+Expected definition"
+`;
+
+exports[`definition of variables does not handle simultaneous definitions 1`] = `
+"> 1 | function foo() {const x = 12, b = false;}
+    |                ^^^^^^^^^^^^^^^^^^^^^^^^
+
+Expected exactly one definition"
+`;
+
+exports[`definition of variables handles definitions of variables 1`] = `
+"Definition foo :=
+  let x := 12 in
+  tt."
+`;
+
+exports[`destructuring of enums does not handle default cases 1`] = `
+"  2 | function foo() {
+  3 |   switch ((s: Status)) {
+> 4 |     default:
+    |    ^^^^^^^^
+> 5 |       return true;
+    | ^^^^^^^^^^^^^^^^^^
+  6 |   }
+  7 | }
+  8 | 
+
+Unhandled default case"
+`;
+
+exports[`destructuring of enums expects a type annotation on the discriminant 1`] = `
+"  1 | 
+  2 | function foo() {
+> 3 |   switch (s) {
+    |          ^
+  4 |     case \\"OK\\":
+  5 |       return true;
+  6 |     case \\"Error\\":
+
+Missing type annotation"
+`;
+
+exports[`destructuring of enums handles destructuring of enums 1`] = `
+"Definition foo :=
+  match s with
+  | Status.OK => true
+  | Status.Error => false
+  end."
+`;
+
+exports[`destructuring of records by definition of variables does not recognize spread patterns 1`] = `
+"> 1 | function foo() {const {...a}: Rec = o;}
+    |                       ^^^^
+
+Unhandled pattern field"
+`;
+
+exports[`destructuring of records by definition of variables handles destructuring of records 1`] = `
+"Definition foo :=
+  let '{| Rec.a := a; Rec.b := b; |} := o in
+  tt."
+`;
+
+exports[`destructuring of records by definition of variables requires a type annotation 1`] = `
+"> 1 | function foo() {const {a, b} = o;}
+    |                      ^^^^^^
+
+Expected a type annotation for the destructuring"
+`;
+
+exports[`destructuring of records by definition of variables requires identifiers for the field values 1`] = `
+"> 1 | function foo() {const {a: {v}}: Rec = o;}
+    |                          ^^^
+
+Expected an identifier"
+`;
+
+exports[`destructuring of records by definition of variables requires strings for the field names 1`] = `
+"> 1 | function foo() {const {[\\"a\\" + \\"b\\"]: v}: Rec = o;}
+    |                       ^^^^^^^^^^^^^^
+
+Expected a plain string as identifier"
+`;
+
+exports[`empty statements handles empty statements 1`] = `
 "Definition foo :=
   tt."
 `;
 
-exports[`handles empty statements 1`] = `
+exports[`returns handles empty returns 1`] = `
 "Definition foo :=
   tt."
+`;
+
+exports[`returns handles returns 1`] = `
+"Definition foo :=
+  12."
 `;
