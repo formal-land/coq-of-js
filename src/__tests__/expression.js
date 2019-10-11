@@ -61,6 +61,12 @@ it("handles sum types", () => {
   ).toMatchSnapshot();
 });
 
+it("handles sum types without parameters", () => {
+  expect(
+    compileAndPrint(`const o = ({type: "Foo"}: Status);`),
+  ).toMatchSnapshot();
+});
+
 it("expects `type` fields to be literal strings", () => {
   expect(compileAndPrint(`const o = ({type: 12}: Status);`)).toMatchSnapshot();
 });

@@ -50,7 +50,7 @@ export type t =
     }
   | {
       type: "SumInstance",
-      constructor: string,
+      constr: string,
       // eslint-disable-next-line no-use-before-define
       fields: RecordField[],
       sum: string,
@@ -336,7 +336,7 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
             ? {type: "RecordInstance", record: typName, fields}
             : {
                 type: "SumInstance",
-                constructor: names[0],
+                constr: names[0],
                 fields,
                 sum: typName,
               };
@@ -529,7 +529,11 @@ export function print(needParens: boolean, expression: t): Doc.t {
     case "RecordInstance":
       return printRecordInstance(expression.record, expression.fields);
     case "SumInstance": {
-      const name = `${expression.sum}.${expression.constructor}`;
+      const name = `${expression.sum}.${expression.constr}`;
+
+      if (expression.fields.length === 0) {
+        return name;
+      }
 
       return Doc.paren(
         needParens,

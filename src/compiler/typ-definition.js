@@ -259,29 +259,20 @@ function printDefineTypeAsModule(name: string): Doc.t {
 
 export function print(name: string, typDefinition: t): Doc.t {
   switch (typDefinition.type) {
-    case "Enum":
-      return printModule(
+    case "Enum": {
+      const module = printModule(
         name,
         Doc.concat([
-          Doc.group(
-            Doc.concat([
-              "Inductive",
-              Doc.line,
-              "t",
-              Doc.line,
-              ":",
-              Doc.line,
-              "Type",
-              Doc.line,
-              ":=",
-            ]),
-          ),
+          Doc.group(Doc.concat(["Inductive", Doc.line, "t", Doc.line, ":="])),
           ...typDefinition.names.map(name =>
             Doc.group(Doc.concat([Doc.hardline, "|", Doc.line, name])),
           ),
           ".",
         ]),
       );
+
+      return Doc.concat([module, Doc.hardline, printDefineTypeAsModule(name)]);
+    }
     case "Record":
       return Doc.concat([
         printModule(name, printRecord("t", typDefinition.fields)),

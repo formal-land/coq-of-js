@@ -81,18 +81,20 @@ Definition Status := Status.t."
 
 exports[`handles type definition of enums 1`] = `
 "Module SayHi.
-  Inductive t : Type :=
+  Inductive t :=
   | hi
   | hello
   | h.
-End SayHi."
+End SayHi.
+Definition SayHi := SayHi.t."
 `;
 
 exports[`handles type definition of enums 2`] = `
 "Module Single.
-  Inductive t : Type :=
+  Inductive t :=
   | s.
-End Single."
+End Single.
+Definition Single := Single.t."
 `;
 
 exports[`handles type synonyms of constants 1`] = `

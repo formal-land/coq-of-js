@@ -93,6 +93,11 @@ exports[`handles sum types 1`] = `
   Status.Foo {| Status.Foo.a := 12; |}."
 `;
 
+exports[`handles sum types without parameters 1`] = `
+"Definition o :=
+  Status.Foo."
+`;
+
 exports[`requires function parameters to be simple names 1`] = `
 "> 1 | function foo({a}) {return a;}
     |             ^^^
