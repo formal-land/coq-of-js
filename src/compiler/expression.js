@@ -49,6 +49,13 @@ export type t =
       value: boolean | number | string,
     }
   | {
+      type: "EnumDestruct",
+      branches: {body: t, name: string}[],
+      discriminant: t,
+      enum: string,
+      withDefault: boolean,
+    }
+  | {
       type: "EnumInstance",
       enum: string,
       instance: string,
@@ -183,6 +190,20 @@ function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
   }
 }
 
+function* getStringOfStringLiteral(
+  expression: BabelAst.Expression,
+): Monad.t<string> {
+  switch (expression.type) {
+    case "StringLiteral":
+      return expression.value;
+    default:
+      return yield* Monad.raise<string>(
+        expression,
+        "Expected a string literal",
+      );
+  }
+}
+
 export function* compileStatements(
   statements: BabelAst.Statement[],
 ): Monad.t<t> {
@@ -193,6 +214,39 @@ export function* compileStatements(
   const statement = statements[0];
 
   switch (statement.type) {
+    case "ReturnStatement":
+      return statement.argument ? yield* compile(statement.argument) : tt;
+    case "SwitchStatement":
+      switch (statement.discriminant.type) {
+        case "TypeCastExpression": {
+          const {expression, typeAnnotation} = statement.discriminant;
+
+          return {
+            type: "EnumDestruct",
+            branches: yield* Monad.all(
+              statement.cases.map(function*(branch) {
+                return {
+                  body: yield* compileStatements(branch.consequent),
+                  name: branch.test
+                    ? yield* getStringOfStringLiteral(branch.test)
+                    : yield* Monad.raise<string>(
+                        branch,
+                        "Unhandled default case",
+                      ),
+                };
+              }),
+            ),
+            discriminant: yield* compile(expression),
+            enum: yield* Typ.compileIdentifier(typeAnnotation.typeAnnotation),
+            withDefault: false,
+          };
+        }
+        default:
+          return yield* Monad.raise<t>(
+            statement.discriminant,
+            "Missing type annotation",
+          );
+      }
     case "VariableDeclaration": {
       if (statement.declarations.length !== 1) {
         return yield* Monad.raise<t>(
@@ -212,8 +266,6 @@ export function* compileStatements(
           : yield* Monad.raise<t>(declaration, "Expected definition"),
       };
     }
-    case "ReturnStatement":
-      return statement.argument ? yield* compile(statement.argument) : tt;
     default:
       return yield* Monad.raiseUnhandled<t>(statement);
   }
@@ -255,20 +307,6 @@ export function* compileFun(
       ? Util.filterMap(fun.typeParameters.params, param => param.name)
       : [],
   };
-}
-
-function* getStringOfStringLiteral(
-  expression: BabelAst.Expression,
-): Monad.t<string> {
-  switch (expression.type) {
-    case "StringLiteral":
-      return expression.value;
-    default:
-      return yield* Monad.raise<string>(
-        expression,
-        "Expected a string literal",
-      );
-  }
 }
 
 export function* compile(expression: BabelAst.Expression): Monad.t<t> {
@@ -606,6 +644,36 @@ export function print(needParens: boolean, expression: t): Doc.t {
     }
     case "Constant":
       return JSON.stringify(expression.value);
+    case "EnumDestruct":
+      return Doc.group(
+        Doc.concat([
+          Doc.group(
+            Doc.concat([
+              "match",
+              Doc.line,
+              print(false, expression.discriminant),
+              Doc.line,
+              "with",
+            ]),
+          ),
+          Doc.hardline,
+          ...expression.branches.map(({body, name}) =>
+            Doc.group(
+              Doc.concat([
+                "|",
+                Doc.line,
+                `${expression.enum}.${name}`,
+                Doc.line,
+                "=>",
+                Doc.line,
+                print(false, body),
+                Doc.hardline,
+              ]),
+            ),
+          ),
+          "end",
+        ]),
+      );
     case "EnumInstance":
       return `${expression.enum}.${expression.instance}`;
     case "FunctionExpression":

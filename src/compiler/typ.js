@@ -23,11 +23,12 @@ function compileIdentifierOrQualifiedTypeIdentifier(
 }
 
 export function* compileIdentifier(typ: BabelAst.FlowType): Monad.t<string> {
-  if (typ.type === "GenericTypeAnnotation") {
-    return compileIdentifierOrQualifiedTypeIdentifier(typ.id);
+  switch (typ.type) {
+    case "GenericTypeAnnotation":
+      return compileIdentifierOrQualifiedTypeIdentifier(typ.id);
+    default:
+      return yield* Monad.raise<string>(typ, "Expected a type identifier");
   }
-
-  return yield* Monad.raise<string>(typ, "Expected a type identifier");
 }
 
 export function* compileIfHandled(typ: BabelAst.FlowType): Monad.t<?t> {
