@@ -1,6 +1,7 @@
 // @flow
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
+import * as Identifier from "./identifier.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 import * as Util from "./util.js";
@@ -42,6 +43,12 @@ export type t =
       value: Fun,
     }
   | {
+      type: "RecordInstance",
+      // eslint-disable-next-line no-use-before-define
+      fields: RecordField[],
+      record: string,
+    }
+  | {
       type: "TypeCastExpression",
       expression: t,
       typeAnnotation: Typ.t,
@@ -66,6 +73,11 @@ export type Fun = {
   body: t,
   returnTyp: ?Typ.t,
   typParameters: string[],
+};
+
+type RecordField = {
+  name: string,
+  value: t,
 };
 
 export const tt: t = {
@@ -129,6 +141,22 @@ export function* compileFun(
       ? Util.filterMap(fun.typeParameters.params, param => param.name)
       : [],
   };
+}
+
+function* getObjectPropertyName(
+  property: BabelAst.ObjectProperty,
+): Monad.t<string> {
+  switch (property.key.type) {
+    case "Identifier":
+      return Identifier.compile(property.key);
+    case "StringLiteral":
+      return property.key.value;
+    default:
+      return yield* Monad.raise<string>(
+        property,
+        "Expected a plain string as identifier",
+      );
+  }
 }
 
 export function* compile(expression: BabelAst.Expression): Monad.t<t> {
@@ -245,6 +273,49 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
       };
     case "TypeCastExpression": {
       switch (expression.expression.type) {
+        case "ObjectExpression": {
+          return {
+            type: "RecordInstance",
+            fields: yield* Monad.all(
+              expression.expression.properties.map(function*(property) {
+                switch (property.type) {
+                  case "ObjectMethod":
+                    return yield* Monad.raise<RecordField>(
+                      property,
+                      "Unhandled method element in object",
+                    );
+                  case "ObjectProperty": {
+                    // Because this seems to be the case here and for
+                    // performance reasons for the type checking.
+                    const value: BabelAst.Expression = (property.value: any);
+
+                    if (!property.computed) {
+                      return {
+                        name: yield* getObjectPropertyName(property),
+                        value: yield* compile(value),
+                      };
+                    }
+
+                    return yield* Monad.raise<RecordField>(
+                      property.key,
+                      "Unhandled computed property name",
+                    );
+                  }
+                  case "SpreadElement":
+                    return yield* Monad.raise<RecordField>(
+                      property,
+                      "Unhandled spread in object",
+                    );
+                  default:
+                    return property;
+                }
+              }),
+            ),
+            record: yield* Typ.compileIdentifier(
+              expression.typeAnnotation.typeAnnotation,
+            ),
+          };
+        }
         case "StringLiteral": {
           const {value} = expression.expression;
 
@@ -404,6 +475,37 @@ export function print(needParens: boolean, expression: t): Doc.t {
             ),
           ]),
         ),
+      );
+    case "RecordInstance":
+      return Doc.group(
+        Doc.concat([
+          "{|",
+          Doc.indent(
+            Doc.concat(
+              expression.fields.map(({name, value}) =>
+                Doc.concat([
+                  Doc.line,
+                  Doc.group(
+                    Doc.concat([
+                      Doc.group(
+                        Doc.concat([
+                          `${expression.record}.${name}`,
+                          Doc.line,
+                          ":=",
+                        ]),
+                      ),
+                      Doc.indent(
+                        Doc.concat([Doc.line, print(false, value), ";"]),
+                      ),
+                    ]),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+          Doc.line,
+          "|}",
+        ]),
       );
     case "TypeCastExpression":
       return Doc.group(

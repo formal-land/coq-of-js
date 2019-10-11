@@ -29,8 +29,26 @@ it("handles empty objects", () => {
   expect(compileAndPrint(`const o = {};`)).toMatchSnapshot();
 });
 
-it("does not handle non-objects without annotations", () => {
+it("does not handle non-empty objects without annotations", () => {
   expect(compileAndPrint(`const o = {x: 12};`)).toMatchSnapshot();
+});
+
+it("handles record instances", () => {
+  expect(
+    compileAndPrint(`const o = ({a: "hi", b: 12}: Rec);`),
+  ).toMatchSnapshot();
+});
+
+it("does not handle records with methods", () => {
+  expect(compileAndPrint(`const o = ({foo() {}}: Rec);`)).toMatchSnapshot();
+});
+
+it("does not handle records with spreads", () => {
+  expect(compileAndPrint(`const o = ({...rec}: Rec);`)).toMatchSnapshot();
+});
+
+it("does not handle records with computed property names", () => {
+  expect(compileAndPrint(`const o = ({[a]: "hi"}: Rec);`)).toMatchSnapshot();
 });
 
 it("handles enum instances", () => {

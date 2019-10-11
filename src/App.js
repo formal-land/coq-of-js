@@ -19,6 +19,14 @@ export default class App extends PureComponent<Props, State> {
   state: State = {
     jsInput: `// Some examples
 
+type Rec = {
+  a: string,
+  b: number,
+  c: boolean
+};
+
+const o = ({a: "hi", b: 12, c: false}: Rec);
+
 type Status =
   | {
       type: "Error",

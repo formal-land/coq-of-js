@@ -14,11 +14,32 @@ exports[`does not handle empty elements in arrays 1`] = `
 Expected non-empty elements in the array"
 `;
 
-exports[`does not handle non-objects without annotations 1`] = `
+exports[`does not handle non-empty objects without annotations 1`] = `
 "> 1 | const o = {x: 12};
     |          ^^^^^^^
 
 Unhandled object expression without type annotation"
+`;
+
+exports[`does not handle records with computed property names 1`] = `
+"> 1 | const o = ({[a]: \\"hi\\"}: Rec);
+    |             ^
+
+Unhandled computed property name"
+`;
+
+exports[`does not handle records with methods 1`] = `
+"> 1 | const o = ({foo() {}}: Rec);
+    |            ^^^^^^^^
+
+Unhandled method element in object"
+`;
+
+exports[`does not handle records with spreads 1`] = `
+"> 1 | const o = ({...rec}: Rec);
+    |            ^^^^^^
+
+Unhandled spread in object"
 `;
 
 exports[`does not handle spreads in arrays 1`] = `
@@ -46,6 +67,11 @@ exports[`handles enum instances 1`] = `
 exports[`handles nulls 1`] = `
 "Definition n :=
   tt."
+`;
+
+exports[`handles record instances 1`] = `
+"Definition o :=
+  {| Rec.a := \\"hi\\"; Rec.b := 12; |}."
 `;
 
 exports[`requires function parameters to be simple names 1`] = `

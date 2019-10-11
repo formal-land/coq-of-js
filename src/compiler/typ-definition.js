@@ -26,7 +26,7 @@ export type t =
       typ: Typ.t,
     };
 
-function getObjectTypePropertyName(
+export function getObjectTypePropertyName(
   property: BabelAst.ObjectTypeProperty,
 ): string {
   switch (property.key.type) {
