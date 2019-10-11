@@ -39,6 +39,8 @@ type Status =
       type: "Nothing",
     };
 
+const status: Status = ({type: "Error", message: "hi"}: Status);
+
 const
   b: boolean = false && true,
   n: number = -12 + 23;

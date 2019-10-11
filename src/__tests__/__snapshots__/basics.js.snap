@@ -1,7 +1,41 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`handles basics 1`] = `
-"Definition b : bool :=
+"Module Rec.
+  Record t := {
+    a : string;
+    b : Z;
+    c : bool;
+  }.
+End Rec.
+Definition Rec := Rec.t.
+
+Definition o :=
+  {|
+    Rec.a := \\"hi\\";
+    Rec.b := 12;
+    Rec.c := false;
+  |}.
+
+Module Status.
+  Module Error.
+    Record t := {
+      message : string;
+    }.
+  End Error.
+
+  Inductive t :=
+  | Error (_ : Error.t)
+  | Loading
+  | Nothing.
+End Status.
+Definition Status := Status.t.
+
+Definition status : Status :=
+  Status.Error
+  {| Status.Error.message := \\"hi\\"; |}.
+
+Definition b : bool :=
   false && true.
 
 Definition n : Z :=

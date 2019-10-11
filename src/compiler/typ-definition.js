@@ -242,8 +242,19 @@ function printRecord(
   ]);
 }
 
-function printConstructorRecord(constructor: Constructor): Doc.t {
-  return printModule(constructor.name, printRecord("t", constructor.fields));
+function printDefineTypeAsModule(name: string): Doc.t {
+  return Doc.group(
+    Doc.concat([
+      "Definition",
+      Doc.line,
+      name,
+      Doc.line,
+      ":=",
+      Doc.line,
+      `${name}.t`,
+      ".",
+    ]),
+  );
 }
 
 export function print(name: string, typDefinition: t): Doc.t {
@@ -272,15 +283,22 @@ export function print(name: string, typDefinition: t): Doc.t {
         ]),
       );
     case "Record":
-      return printModule(name, printRecord("t", typDefinition.fields));
-    case "Sum":
-      return printModule(
+      return Doc.concat([
+        printModule(name, printRecord("t", typDefinition.fields)),
+        Doc.hardline,
+        printDefineTypeAsModule(name),
+      ]);
+    case "Sum": {
+      const module = printModule(
         name,
         Doc.concat([
           Doc.join(Doc.concat([Doc.hardline, Doc.hardline]), [
             ...Util.filterMap(typDefinition.constructors, constructor =>
               constructor.fields.length !== 0
-                ? printConstructorRecord(constructor)
+                ? printModule(
+                    constructor.name,
+                    printRecord("t", constructor.fields),
+                  )
                 : null,
             ),
             Doc.group(
@@ -319,6 +337,9 @@ export function print(name: string, typDefinition: t): Doc.t {
           ]),
         ]),
       );
+
+      return Doc.concat([module, Doc.hardline, printDefineTypeAsModule(name)]);
+    }
     case "Synonym":
       return Doc.group(
         Doc.concat([

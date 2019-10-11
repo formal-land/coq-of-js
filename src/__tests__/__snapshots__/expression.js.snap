@@ -32,14 +32,21 @@ exports[`does not handle records with methods 1`] = `
 "> 1 | const o = ({foo() {}}: Rec);
     |            ^^^^^^^^
 
-Unhandled method element in object"
+Expected a named property"
+`;
+
+exports[`does not handle records with numeric names 1`] = `
+"> 1 | const o = ({12: \\"hi\\"}: Rec);
+    |            ^^^^^^^^
+
+Expected a plain string as identifier"
 `;
 
 exports[`does not handle records with spreads 1`] = `
 "> 1 | const o = ({...rec}: Rec);
     |            ^^^^^^
 
-Unhandled spread in object"
+Expected a named property"
 `;
 
 exports[`does not handle spreads in arrays 1`] = `
@@ -47,6 +54,13 @@ exports[`does not handle spreads in arrays 1`] = `
     |           ^^^^^
 
 Spreads in arrays are not handled"
+`;
+
+exports[`expects \`type\` fields to be literal strings 1`] = `
+"> 1 | const o = ({type: 12}: Status);
+    |                  ^^
+
+Expected a string literal"
 `;
 
 exports[`handles empty arrays 1`] = `
@@ -72,6 +86,11 @@ exports[`handles nulls 1`] = `
 exports[`handles record instances 1`] = `
 "Definition o :=
   {| Rec.a := \\"hi\\"; Rec.b := 12; |}."
+`;
+
+exports[`handles sum types 1`] = `
+"Definition o :=
+  Status.Foo {| Status.Foo.a := 12; |}."
 `;
 
 exports[`requires function parameters to be simple names 1`] = `

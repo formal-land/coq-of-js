@@ -6,6 +6,28 @@ it("handles basics", () => {
     compileAndPrint(
       `// Some examples
 
+type Rec = {
+  a: string,
+  b: number,
+  c: boolean
+};
+
+const o = ({a: "hi", b: 12, c: false}: Rec);
+
+type Status =
+  | {
+      type: "Error",
+      message: string,
+    }
+  | {
+      type: "Loading",
+    }
+  | {
+      type: "Nothing",
+    };
+
+const status: Status = ({type: "Error", message: "hi"}: Status);
+
 const
   b: boolean = false && true,
   n: number = -12 + 23;
