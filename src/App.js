@@ -9,15 +9,7 @@ import * as Program from "./compiler/program.js";
 import Output from "./Output.js";
 import "./App.css";
 
-type Props = {};
-
-type State = {
-  jsInput: string,
-};
-
-export default class App extends PureComponent<Props, State> {
-  state: State = {
-    jsInput: `// Some examples
+export const defaultExample: string = `// Some examples
 
 type Rec = {
   a: string,
@@ -62,11 +54,22 @@ function basicTypes(n: number, m: number): string {
 const r = id(basicTypes(12, 23));
 
 const f = function<A> (x : A, y : A): bool {
-  return true;
+  const v = true;
+  return v;
 }
 
 const arrow = x => x + 1;
-`,
+`;
+
+type Props = {};
+
+type State = {
+  jsInput: string,
+};
+
+export default class App extends PureComponent<Props, State> {
+  state: State = {
+    jsInput: defaultExample,
   };
 
   onChangeJsInput = (event: SyntheticEvent<*>) => {

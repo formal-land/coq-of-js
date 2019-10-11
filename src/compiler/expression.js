@@ -6,6 +6,22 @@ import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 import * as Util from "./util.js";
 
+type LeftValueRecordField = {
+  name: string,
+  variable: string,
+};
+
+type LeftValue =
+  | {
+      type: "Record",
+      fields: LeftValueRecordField[],
+      record: string,
+    }
+  | {
+      type: "Variable",
+      name: string,
+    };
+
 export type t =
   | {
       type: "ArrayExpression",
@@ -41,6 +57,12 @@ export type t =
       type: "FunctionExpression",
       // eslint-disable-next-line no-use-before-define
       value: Fun,
+    }
+  | {
+      type: "Let",
+      body: t,
+      lval: LeftValue,
+      value: t,
     }
   | {
       type: "RecordInstance",
@@ -92,24 +114,109 @@ export const tt: t = {
   name: "tt",
 };
 
+function* getObjectPropertyName(
+  property: BabelAst.ObjectProperty,
+): Monad.t<string> {
+  switch (property.key.type) {
+    case "Identifier":
+      return Identifier.compile(property.key);
+    case "StringLiteral":
+      return property.key.value;
+    default:
+      return yield* Monad.raise<string>(
+        property,
+        "Expected a plain string as identifier",
+      );
+  }
+}
+
+function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
+  switch (lval.type) {
+    case "Identifier":
+      return {
+        type: "Variable",
+        name: Identifier.compile(lval),
+      };
+    case "ObjectPattern": {
+      const typName = lval.typeAnnotation
+        ? yield* Typ.compileIdentifier(lval.typeAnnotation.typeAnnotation)
+        : yield* Monad.raise<string>(
+            lval,
+            "Expected a type annotation for the destructuring",
+          );
+      const fields = yield* Monad.all(
+        lval.properties.map(function*(property) {
+          switch (property.type) {
+            case "ObjectProperty":
+              switch (property.value.type) {
+                case "Identifier": {
+                  const {value} = property;
+
+                  return {
+                    name: yield* getObjectPropertyName(property),
+                    variable: Identifier.compile(value),
+                  };
+                }
+                default:
+                  return yield* Monad.raise<LeftValueRecordField>(
+                    property.value,
+                    "Expected an identifier",
+                  );
+              }
+            default:
+              return yield* Monad.raise<LeftValueRecordField>(
+                property,
+                "Unhandled pattern field",
+              );
+          }
+        }),
+      );
+
+      return {
+        type: "Record",
+        fields,
+        record: typName,
+      };
+    }
+    default:
+      return yield* Monad.raise<LeftValue>(lval, "Unhandled left value");
+  }
+}
+
 export function* compileStatements(
   statements: BabelAst.Statement[],
 ): Monad.t<t> {
   if (statements.length === 0) {
     return tt;
   }
-  if (statements.length === 1) {
-    switch (statements[0].type) {
-      case "ReturnStatement":
-        return statements[0].argument
-          ? yield* compile(statements[0].argument)
-          : tt;
-      default:
-        return yield* Monad.raise<t>(statements[0], "Expected a return");
-    }
-  }
 
-  return yield* Monad.raise<t>(statements[0], "Expected a simple return");
+  const statement = statements[0];
+
+  switch (statement.type) {
+    case "VariableDeclaration": {
+      if (statement.declarations.length !== 1) {
+        return yield* Monad.raise<t>(
+          statement,
+          "Expected exactly one definition",
+        );
+      }
+
+      const declaration = statement.declarations[0];
+
+      return {
+        type: "Let",
+        body: yield* compileStatements(statements.slice(1)),
+        lval: yield* compileLVal(declaration.id),
+        value: declaration.init
+          ? yield* compile(declaration.init)
+          : yield* Monad.raise<t>(declaration, "Expected definition"),
+      };
+    }
+    case "ReturnStatement":
+      return statement.argument ? yield* compile(statement.argument) : tt;
+    default:
+      return yield* Monad.raiseUnhandled<t>(statement);
+  }
 }
 
 export function* compileFun(
@@ -148,22 +255,6 @@ export function* compileFun(
       ? Util.filterMap(fun.typeParameters.params, param => param.name)
       : [],
   };
-}
-
-function* getObjectPropertyName(
-  property: BabelAst.ObjectProperty,
-): Monad.t<string> {
-  switch (property.key.type) {
-    case "Identifier":
-      return Identifier.compile(property.key);
-    case "StringLiteral":
-      return property.key.value;
-    default:
-      return yield* Monad.raise<string>(
-        property,
-        "Expected a plain string as identifier",
-      );
-  }
 }
 
 function* getStringOfStringLiteral(
@@ -396,7 +487,10 @@ export function printFunArguments(funArguments: FunArgument[]): Doc.t {
   );
 }
 
-function printRecordInstance(record: string, fields: RecordField[]): Doc.t {
+function printRecordInstance(
+  record: string,
+  fields: {name: string, value: Doc.t}[],
+): Doc.t {
   return Doc.group(
     Doc.concat([
       "{|",
@@ -408,7 +502,7 @@ function printRecordInstance(record: string, fields: RecordField[]): Doc.t {
               Doc.group(
                 Doc.concat([
                   Doc.group(Doc.concat([`${record}.${name}`, Doc.line, ":="])),
-                  Doc.indent(Doc.concat([Doc.line, print(false, value), ";"])),
+                  Doc.indent(Doc.concat([Doc.line, value, ";"])),
                 ]),
               ),
             ]),
@@ -419,6 +513,23 @@ function printRecordInstance(record: string, fields: RecordField[]): Doc.t {
       "|}",
     ]),
   );
+}
+
+function printLeftValue(lval: LeftValue): Doc.t {
+  switch (lval.type) {
+    case "Record":
+      return Doc.concat([
+        "'",
+        printRecordInstance(
+          lval.record,
+          lval.fields.map(({name, variable}) => ({name, value: variable})),
+        ),
+      ]);
+    case "Variable":
+      return lval.name;
+    default:
+      return lval;
+  }
 }
 
 export function print(needParens: boolean, expression: t): Doc.t {
@@ -526,8 +637,33 @@ export function print(needParens: boolean, expression: t): Doc.t {
           ]),
         ),
       );
+    case "Let":
+      return Doc.group(
+        Doc.concat([
+          Doc.group(
+            Doc.concat([
+              "let",
+              Doc.line,
+              printLeftValue(expression.lval),
+              Doc.line,
+              ":=",
+            ]),
+          ),
+          Doc.indent(Doc.concat([Doc.line, print(false, expression.value)])),
+          Doc.line,
+          "in",
+          Doc.hardline,
+          print(false, expression.body),
+        ]),
+      );
     case "RecordInstance":
-      return printRecordInstance(expression.record, expression.fields);
+      return printRecordInstance(
+        expression.record,
+        expression.fields.map(({name, value}) => ({
+          name,
+          value: print(false, value),
+        })),
+      );
     case "SumInstance": {
       const name = `${expression.sum}.${expression.constr}`;
 
@@ -541,7 +677,13 @@ export function print(needParens: boolean, expression: t): Doc.t {
           Doc.concat([
             name,
             Doc.line,
-            printRecordInstance(name, expression.fields),
+            printRecordInstance(
+              name,
+              expression.fields.map(({name, value}) => ({
+                name,
+                value: print(false, value),
+              })),
+            ),
           ]),
         ),
       );
