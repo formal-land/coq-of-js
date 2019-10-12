@@ -1,5 +1,5 @@
 // @flow
-import {compileAndPrint} from "../compiler/index.js";
+import {compileAndPrint} from "../index.js";
 
 describe("exports", () => {
   it("handles exports", () => {
