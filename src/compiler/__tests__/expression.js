@@ -37,6 +37,10 @@ describe("binary expressions", () => {
   it("handles binary expressions", () => {
     expect(compileAndPrint(`const n = 1 + 1;`)).toMatchSnapshot();
   });
+
+  it("handles nested binary expressions", () => {
+    expect(compileAndPrint(`const n = (1 + 2) * 3;`)).toMatchSnapshot();
+  });
 });
 
 describe("function calls", () => {

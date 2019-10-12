@@ -27,6 +27,7 @@ export function merge<A>(results: t<A>[]): t<A[]> {
                 type: "Error",
                 errors: accumulator.errors,
               };
+            /* istanbul ignore next */
             default:
               return result;
           }
@@ -42,9 +43,11 @@ export function merge<A>(results: t<A>[]): t<A[]> {
                 type: "Success",
                 value: [...accumulator.value, result.value],
               };
+            /* istanbul ignore next */
             default:
               return result;
           }
+        /* istanbul ignore next */
         default:
           return accumulator;
       }

@@ -17,6 +17,7 @@ function compileIdentifierOrQualifiedTypeIdentifier(
       return Identifier.compile(id);
     case "QualifiedTypeIdentifier":
       return Identifier.compile(id.id);
+    /* istanbul ignore next */
     default:
       return id;
   }
@@ -121,6 +122,7 @@ export function print(typ: t): Doc.t {
   switch (typ.type) {
     case "Variable":
       return typ.name;
+    /* istanbul ignore next */
     default:
       return typ;
   }

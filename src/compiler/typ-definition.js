@@ -34,6 +34,7 @@ export function getObjectTypePropertyName(
       return Identifier.compile(property.key);
     case "StringLiteral":
       return property.key.value;
+    /* istanbul ignore next */
     default:
       return property.key;
   }
@@ -198,6 +199,7 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
           );
       }
     }
+    /* istanbul ignore next */
     default:
       return yield* Monad.raiseUnhandled<t>(typ);
   }

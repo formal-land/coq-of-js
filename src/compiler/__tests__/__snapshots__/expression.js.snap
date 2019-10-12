@@ -46,6 +46,11 @@ exports[`binary expressions handles binary expressions 1`] = `
   1 + 1."
 `;
 
+exports[`binary expressions handles nested binary expressions 1`] = `
+"Definition n :=
+  (1 + 2) * 3."
+`;
+
 exports[`enums does not handle enums with an inlined type annotation 1`] = `
 "> 1 | const e = (\\"Green\\": \\"Green\\" | \\"Blue\\");
     |                    ^^^^^^^^^^^^^^^^

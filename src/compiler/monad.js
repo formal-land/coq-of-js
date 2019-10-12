@@ -1,4 +1,7 @@
 // @flow
+// This monad is used internally by the compiler. It handles the user errors.
+// In contrast to exceptions, it supports one or many errors. Thus the user
+// may get all the errors found by the compiler at once.
 import * as BabelAst from "./babel-ast.js";
 import * as Result from "./result.js";
 
@@ -20,6 +23,8 @@ export function* ret<A>(value: A): t<A> {
   return value;
 }
 
+// Evaluate an array of expressions.
+// Keep all the errors in case there are many.
 export function* all<A>(expressions: t<A>[]): t<A[]> {
   return yield {type: "All", expressions};
 }
@@ -72,6 +77,7 @@ function runWithAnswer<A>(expression: t<A>, answer?: any): Result.t<any> {
 
         return {type: "Error", errors: [error]};
       }
+      /* istanbul ignore next */
       default:
         return result.value;
     }
@@ -82,6 +88,7 @@ function runWithAnswer<A>(expression: t<A>, answer?: any): Result.t<any> {
       return nextAnswer;
     case "Success":
       return runWithAnswer(expression, nextAnswer.value);
+    /* istanbul ignore next */
     default:
       return nextAnswer;
   }
