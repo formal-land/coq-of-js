@@ -21,7 +21,7 @@ export default class App extends PureComponent<Props, State> {
   state: State = {
     jsInput:
       typeof window !== "undefined"
-        ? window.localStorage.getItem("jsInput") || this.defaultJsInput
+        ? window.sessionStorage.getItem("jsInput") || this.defaultJsInput
         : this.defaultJsInput,
   };
 
@@ -31,7 +31,7 @@ export default class App extends PureComponent<Props, State> {
     this.setState({jsInput: value});
 
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("jsInput", value);
+      window.sessionStorage.setItem("jsInput", value);
     }
   };
 
