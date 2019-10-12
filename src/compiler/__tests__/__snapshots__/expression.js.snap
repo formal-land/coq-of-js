@@ -14,9 +14,43 @@ exports[`arrays does not handle spreads 1`] = `
 Spreads in arrays are not handled"
 `;
 
+exports[`arrays handles arrays 1`] = `
+"Definition a :=
+  [ 12 ]."
+`;
+
 exports[`arrays handles empty arrays 1`] = `
 "Definition a :=
   []."
+`;
+
+exports[`arrow functions handles arrow functions 1`] = `
+"Definition f :=
+  fun x => x."
+`;
+
+exports[`arrow functions handles type annotations 1`] = `
+"Definition f :=
+  fun {A : Type} (x : A) => x."
+`;
+
+exports[`arrow functions requires function parameters to be simple names 1`] = `
+"> 1 | const f = ({a}) => {};
+    |           ^^^
+
+Expected simple identifier as function parameter"
+`;
+
+exports[`binary expressions handles binary expressions 1`] = `
+"Definition n :=
+  1 + 1."
+`;
+
+exports[`enums does not handle enums with an inlined type annotation 1`] = `
+"> 1 | const e = (\\"Green\\": \\"Green\\" | \\"Blue\\");
+    |                    ^^^^^^^^^^^^^^^^
+
+Expected a type identifier"
 `;
 
 exports[`enums handles enums 1`] = `
@@ -31,11 +65,19 @@ exports[`function calls does not handle spread parameters 1`] = `
 Unhandled function argument"
 `;
 
-exports[`function definitions requires function parameters to be simple names 1`] = `
-"> 1 | function foo({a}) {return a;}
-    |             ^^^
+exports[`function calls handles function calls 1`] = `
+"Definition y :=
+  f x."
+`;
 
-Expected simple identifier as function parameter"
+exports[`functions handles functions in expressions 1`] = `
+"Definition f :=
+  fun x => x."
+`;
+
+exports[`logical expressions handles logical expressions 1`] = `
+"Definition b :=
+  true && false."
 `;
 
 exports[`nulls handles nulls 1`] = `
@@ -103,4 +145,19 @@ exports[`objects as sum types handles sum types 1`] = `
 exports[`objects as sum types handles sum types without parameters 1`] = `
 "Definition o :=
   Status.Foo."
+`;
+
+exports[`ternary expressions handles ternary expressions 1`] = `
+"Definition n :=
+  if true then 12 else 0."
+`;
+
+exports[`type casts handles type casts 1`] = `
+"Definition b :=
+  (true : bool)."
+`;
+
+exports[`unary expressions handles unary expressions 1`] = `
+"Definition n :=
+  + 0."
 `;

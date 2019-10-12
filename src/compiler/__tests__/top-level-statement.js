@@ -20,6 +20,16 @@ describe("imports", () => {
 });
 
 describe("definitions", () => {
+  it("handles definitions of constants", () => {
+    expect(compileAndPrint(`const n = 12;`)).toMatchSnapshot();
+  });
+
+  it("handles definitions of functions", () => {
+    expect(
+      compileAndPrint(`function id<A>(x: A): A {return x;}`),
+    ).toMatchSnapshot();
+  });
+
   it("does not handle destructuring of constants", () => {
     expect(compileAndPrint(`const [a, b] = [1, 2];`)).toMatchSnapshot();
   });
