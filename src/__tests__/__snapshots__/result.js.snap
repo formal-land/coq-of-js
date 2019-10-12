@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`can handle several errors 1`] = `
+exports[`merging of errors handles errors in several paths 1`] = `
 "> 1 | const a1 = [,]; const a2 = [,];
     |           ^^^
 

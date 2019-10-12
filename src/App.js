@@ -16,61 +16,23 @@ type State = {
 };
 
 export default class App extends PureComponent<Props, State> {
+  defaultJsInput = "// Type some JavaScript in here\n";
+
   state: State = {
-    jsInput: `// Some examples
-
-type Rec = {
-  a: string,
-  b: number,
-  c: boolean
-};
-
-const o = ({a: "hi", b: 12, c: false}: Rec);
-
-type Status =
-  | {
-      type: "Error",
-      message: string,
-    }
-  | {
-      type: "Loading",
-    }
-  | {
-      type: "Nothing",
-    };
-
-const status: Status = ({type: "Error", message: "hi"}: Status);
-
-const
-  b: boolean = false && true,
-  n: number = -12 + 23;
-
-const s = "hi";
-
-const a = [1, (2 : number), 3];
-
-const cond = b ? "a" : 'b';
-
-function id<A, B>(x: A): A {
-  return x;
-}
-
-function basicTypes(n: number, m: number): string {
-  return "OK";
-}
-
-const r = id(basicTypes(12, 23));
-
-const f = function<A> (x : A, y : A): bool {
-  return true;
-}
-
-const arrow = x => x + 1;
-`,
+    jsInput:
+      typeof window !== "undefined"
+        ? window.localStorage.getItem("jsInput") || this.defaultJsInput
+        : this.defaultJsInput,
   };
 
-  onChangeJsInput = (event: SyntheticEvent<*>) => {
-    this.setState({jsInput: event.currentTarget.value});
+  onChangeJsInput = (event: SyntheticEvent<HTMLTextAreaElement>) => {
+    const {value} = event.currentTarget;
+
+    this.setState({jsInput: value});
+
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("jsInput", value);
+    }
   };
 
   getJsAst(jsInput: string): any | string {
@@ -112,10 +74,17 @@ const arrow = x => x + 1;
   }
 
   getCoqString(coqAst: Program.t): string {
-    return doc.printer.printDocToString(Program.print(coqAst), {
-      printWidth: 40,
-      tabWidth: 2,
-    }).formatted;
+    const coqProgram: string = doc.printer.printDocToString(
+      Program.print(coqAst),
+      {
+        printWidth: 40,
+        tabWidth: 2,
+      },
+    ).formatted;
+
+    return `(* Generated Coq *)
+
+${coqProgram}`;
   }
 
   render() {

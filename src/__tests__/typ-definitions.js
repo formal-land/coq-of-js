@@ -1,10 +1,11 @@
 // @flow
 import {compileAndPrint} from "../compiler/index.js";
 
-it("handles type synonyms of constants", () => {
-  expect(
-    compileAndPrint(
-      `type b = boolean;
+describe("type synonyms", () => {
+  it("handles type synonyms of constants", () => {
+    expect(
+      compileAndPrint(
+        `type b = boolean;
 type s = string;
 type v = void;
 type n = null;
@@ -12,52 +13,60 @@ type f = number;
 type o = {};
 type e = empty;
 `,
-    ),
-  ).toMatchSnapshot();
+      ),
+    ).toMatchSnapshot();
+  });
 });
 
-it("handles type definition of enums", () => {
-  expect(
-    compileAndPrint(`type SayHi = "hi" | 'hello' | "h";`),
-  ).toMatchSnapshot();
+describe("enums", () => {
+  it("handles type definition of enums", () => {
+    expect(
+      compileAndPrint(`type SayHi = "hi" | 'hello' | "h";`),
+    ).toMatchSnapshot();
 
-  expect(compileAndPrint('type Single = "s";')).toMatchSnapshot();
+    expect(compileAndPrint('type Single = "s";')).toMatchSnapshot();
+  });
+
+  it("does not handle other elements than strings", () => {
+    expect(
+      compileAndPrint(`type SayHi = "hi" | 'hello' | 12;`),
+    ).toMatchSnapshot();
+  });
+
+  it("does not handle other literals than string", () => {
+    expect(compileAndPrint(`type Boo = false;`)).toMatchSnapshot();
+
+    expect(compileAndPrint(`type Num = 12;`)).toMatchSnapshot();
+  });
 });
 
-it("does not handle enums with other elements than strings", () => {
-  expect(
-    compileAndPrint(`type SayHi = "hi" | 'hello' | 12;`),
-  ).toMatchSnapshot();
+describe("records", () => {
+  it("does handle records", () => {
+    expect(
+      compileAndPrint(`type Status = {
+  message: string,
+  quantity: number,
+};
+`),
+    ).toMatchSnapshot();
+  });
+
+  it("does not handle spreads", () => {
+    expect(
+      compileAndPrint(`type Status = {
+  message: string,
+  quantity: number,
+  ...A,
+};
+`),
+    ).toMatchSnapshot();
+  });
 });
 
-it("does not handle other literals than string", () => {
-  expect(compileAndPrint(`type Boo = false;`)).toMatchSnapshot();
-
-  expect(compileAndPrint(`type Num = 12;`)).toMatchSnapshot();
-});
-
-it("does handle records", () => {
-  expect(
-    compileAndPrint(`type Status = {
-      message: string,
-      quantity: number,
-    };`),
-  ).toMatchSnapshot();
-});
-
-it("does not handle records with spreads", () => {
-  expect(
-    compileAndPrint(`type Status = {
-      message: string,
-      quantity: number,
-      ...A,
-    };`),
-  ).toMatchSnapshot();
-});
-
-it("handles sum types", () => {
-  expect(
-    compileAndPrint(`type Status =
+describe("sum types", () => {
+  it("handles sum types", () => {
+    expect(
+      compileAndPrint(`type Status =
   | {
       type: "Error",
       message: string,
@@ -72,55 +81,62 @@ it("handles sum types", () => {
       type: "Success",
       fresh: boolean,
       "value": string,
-    };`),
-  ).toMatchSnapshot();
+    };
+`),
+    ).toMatchSnapshot();
 
-  expect(
-    compileAndPrint(`type Status =
+    expect(
+      compileAndPrint(`type Status =
   | {
       type: "Error",
       message: string,
-    };`),
-  ).toMatchSnapshot();
-});
+    };
+`),
+    ).toMatchSnapshot();
+  });
 
-it("shows errors for sum types", () => {
-  expect(
-    compileAndPrint(`type Status =
+  it("shows errors for sum types", () => {
+    expect(
+      compileAndPrint(`type Status =
   | {
       message: string,
     }
   | {
       type: "Loading",
-    };`),
-  ).toMatchSnapshot();
+    };
+`),
+    ).toMatchSnapshot();
 
-  expect(
-    compileAndPrint(`type Status =
+    expect(
+      compileAndPrint(`type Status =
   | {
       type: "Error",
       message: string,
     }
   | {
       type: number,
-    };`),
-  ).toMatchSnapshot();
+    };
+`),
+    ).toMatchSnapshot();
 
-  expect(
-    compileAndPrint(`type Status =
+    expect(
+      compileAndPrint(`type Status =
   | {
-     type: "Spread",
+    type: "Spread",
       ...A,
-    };`),
-  ).toMatchSnapshot();
+    };
+`),
+    ).toMatchSnapshot();
 
-  expect(
-    compileAndPrint(`type Status =
+    expect(
+      compileAndPrint(`type Status =
   | {
-     type: "Spread",
+    type: "Spread",
     }
-  | string;`),
-  ).toMatchSnapshot();
+  | string;
+`),
+    ).toMatchSnapshot();
 
-  expect(compileAndPrint(`type Status = number | string;`)).toMatchSnapshot();
+    expect(compileAndPrint(`type Status = number | string;`)).toMatchSnapshot();
+  });
 });
