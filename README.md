@@ -1,9 +1,11 @@
-# coq-of-js
+# 🌍 🐓 coq-of-js
 > Import JavaScript programs to Coq. Prove all the things! 🐓
+
+**Online demo: https://clarus.github.io/coq-of-js/**
 
 The aim of this project is to import JavaScript programs to the [Coq](https://coq.inria.fr/) language, to do [formal verification](https://en.wikipedia.org/wiki/Formal_verification) on JavaScript code.
 
-**Still under heavy development!**
+**Still under heavy development**
 
 ## Run
 For now: a web-interface to do development, with four columns:
@@ -12,6 +14,12 @@ For now: a web-interface to do development, with four columns:
 * the Coq AST;
 * the Coq source.
 
+From the command line:
+```
+npm install
+npm start
+```
+or with [Yarn](https://yarnpkg.com/lang/en/):
 ```
 yarn install
 yarn start
