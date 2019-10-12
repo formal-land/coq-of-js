@@ -27,6 +27,16 @@
   overflow: auto;
 }
 
+@media (max-width: 768px) {
+  .split {
+    width: 50%;
+  }
+
+  .js-ast, .coq-ast {
+    display: none;
+  }
+}
+
 h1 {
   font-size: 16px;
   font-weight: 500;
