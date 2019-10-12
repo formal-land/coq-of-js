@@ -90,7 +90,12 @@ export default class App extends PureComponent<Props, State> {
     return (
       <div>
         <div className="split js-source">
-          <h1>JavaScript editor</h1>
+          <h1>
+            <span aria-label="globe" role="img">
+              🌍
+            </span>{" "}
+            JavaScript editor
+          </h1>
           <textarea onChange={this.onChangeJsInput} value={jsInput} />
         </div>
         <div className="split js-ast">
@@ -102,7 +107,12 @@ export default class App extends PureComponent<Props, State> {
           <Output output={coqAst} />
         </div>
         <div className="split coq-source">
-          <h1>Generated Coq</h1>
+          <h1>
+            <span aria-label="rooster" role="img">
+              🐓
+            </span>{" "}
+            Generated Coq
+          </h1>
           <Output output={coqString} />
         </div>
       </div>

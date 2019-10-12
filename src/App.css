@@ -27,22 +27,33 @@
   overflow: auto;
 }
 
+@media (max-width: 768px) {
+  .split {
+    width: 50%;
+  }
+
+  .js-ast, .coq-ast {
+    display: none;
+  }
+}
+
 h1 {
-  margin-left: 10px;
   font-size: 16px;
   font-weight: 500;
+  margin-left: 10px;
 }
 
 textarea {
-  box-sizing: border-box;
   border: none;
-  min-height: 100%;
+  box-sizing: border-box;
   height: 100%;
-  resize: none;
-  min-width: 100%;
-  width: 100%;
-  padding: 10px;
   margin: 0px;
+  min-height: 100%;
+  min-width: 100%;
+  outline: none;
+  padding: 10px;
+  resize: none;
+  width: 100%;
 }
 
 pre {
