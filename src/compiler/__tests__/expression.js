@@ -1,13 +1,11 @@
 // @flow
-import {compileAndPrint} from "../compiler/index.js";
-
-describe("function definitions", () => {
-  it("requires function parameters to be simple names", () => {
-    expect(compileAndPrint(`function foo({a}) {return a;}`)).toMatchSnapshot();
-  });
-});
+import {compileAndPrint} from "../index.js";
 
 describe("arrays", () => {
+  it("handles arrays", () => {
+    expect(compileAndPrint(`const a = [12];`)).toMatchSnapshot();
+  });
+
   it("handles empty arrays", () => {
     expect(compileAndPrint(`const a = [];`)).toMatchSnapshot();
   });
@@ -21,9 +19,57 @@ describe("arrays", () => {
   });
 });
 
+describe("arrow functions", () => {
+  it("handles arrow functions", () => {
+    expect(compileAndPrint(`const f = x => x;`)).toMatchSnapshot();
+  });
+
+  it("handles type annotations", () => {
+    expect(compileAndPrint(`const f = <A>(x: A): A => x;`)).toMatchSnapshot();
+  });
+
+  it("requires function parameters to be simple names", () => {
+    expect(compileAndPrint(`const f = ({a}) => {};`)).toMatchSnapshot();
+  });
+});
+
+describe("binary expressions", () => {
+  it("handles binary expressions", () => {
+    expect(compileAndPrint(`const n = 1 + 1;`)).toMatchSnapshot();
+  });
+
+  it("handles nested binary expressions", () => {
+    expect(compileAndPrint(`const n = (1 + 2) * 3;`)).toMatchSnapshot();
+  });
+});
+
 describe("function calls", () => {
+  it("handles function calls", () => {
+    expect(compileAndPrint(`const y = f(x);`)).toMatchSnapshot();
+  });
+
   it("does not handle spread parameters", () => {
     expect(compileAndPrint(`const n = f(...a);`)).toMatchSnapshot();
+  });
+});
+
+describe("ternary expressions", () => {
+  it("handles ternary expressions", () => {
+    expect(compileAndPrint(`const n = true ? 12 : 0;`)).toMatchSnapshot();
+  });
+});
+
+describe("functions", () => {
+  it("handles functions in expressions", () => {
+    expect(
+      compileAndPrint(`const f = function (x) {return x};`),
+    ).toMatchSnapshot();
+  });
+});
+
+describe("logical expressions", () => {
+  it("handles logical expressions", () => {
+    expect(compileAndPrint(`const b = true && false;`)).toMatchSnapshot();
   });
 });
 
@@ -88,5 +134,23 @@ describe("objects as sum types", () => {
 describe("enums", () => {
   it("handles enums", () => {
     expect(compileAndPrint(`const e = ("Green": Kind);`)).toMatchSnapshot();
+  });
+
+  it("does not handle enums with an inlined type annotation", () => {
+    expect(
+      compileAndPrint(`const e = ("Green": "Green" | "Blue");`),
+    ).toMatchSnapshot();
+  });
+});
+
+describe("type casts", () => {
+  it("handles type casts", () => {
+    expect(compileAndPrint(`const b = (true: boolean);`)).toMatchSnapshot();
+  });
+});
+
+describe("unary expressions", () => {
+  it("handles unary expressions", () => {
+    expect(compileAndPrint(`const n = +0;`)).toMatchSnapshot();
   });
 });

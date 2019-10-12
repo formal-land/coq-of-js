@@ -1,5 +1,5 @@
 // @flow
-import {compileAndPrint} from "../compiler/index.js";
+import {compileAndPrint} from "../index.js";
 
 describe("type synonyms", () => {
   it("handles type synonyms of constants", () => {

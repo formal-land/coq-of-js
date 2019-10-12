@@ -1,5 +1,5 @@
 // @flow
-import {compileAndPrint} from "../compiler/index.js";
+import {compileAndPrint} from "../index.js";
 
 describe("merging of errors", () => {
   it("handles errors in several paths", () => {

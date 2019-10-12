@@ -565,6 +565,7 @@ function printLeftValue(lval: LeftValue): Doc.t {
       ]);
     case "Variable":
       return lval.name;
+    /* istanbul ignore next */
     default:
       return lval;
   }
@@ -783,6 +784,7 @@ export function print(needParens: boolean, expression: t): Doc.t {
       );
     case "Variable":
       return expression.name;
+    /* istanbul ignore next */
     default:
       return expression;
   }

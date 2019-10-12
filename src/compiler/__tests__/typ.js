@@ -1,5 +1,5 @@
 // @flow
-import {compileAndPrint} from "../compiler/index.js";
+import {compileAndPrint} from "../index.js";
 
 describe("unhandled types", () => {
   it("shows an error message on unhandled types", () => {

@@ -23,6 +23,7 @@ export function compileAndPrint(
         printWidth,
         tabWidth: 2,
       }).formatted;
+    /* istanbul ignore next */
     default:
       return coqAst;
   }

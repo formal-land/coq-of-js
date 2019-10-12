@@ -128,6 +128,7 @@ export function print(declaration: t): Doc.t {
       );
     case "TypeDefinition":
       return TypDefinition.print(declaration.name, declaration.typDefinition);
+    /* istanbul ignore next */
     default:
       return declaration;
   }
