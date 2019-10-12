@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "gh-pages": "^2.1.1",
     "prettier": "^1.18.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
@@ -11,10 +12,12 @@
   "scripts": {
     "build": "react-scripts build",
     "coverage": "react-scripts test --coverage --collect-coverage-from=src/compiler/**/*.js --watchAll=false",
+    "deploy": "gh-pages -d build",
     "eject": "react-scripts eject",
     "flow": "flow",
-    "prettier": "prettier --write src/**/*.{js,json}",
+    "predeploy": "npm run build",
     "prettier-check": "prettier --check src/**/*.{js,json}",
+    "prettier": "prettier --write src/**/*.{js,json}",
     "start": "react-scripts start",
     "test": "react-scripts test"
   },
@@ -40,5 +43,6 @@
   "devDependencies": {
     "flow-bin": "^0.105.2",
     "flow-typed": "^2.6.1"
-  }
+  },
+  "homepage": "https://clarus.github.io/coq-of-js"
 }
