@@ -6,6 +6,7 @@ import doc from "prettier/doc.js";
 import * as Error from "./compiler/error.js";
 import * as Monad from "./compiler/monad.js";
 import * as Program from "./compiler/program.js";
+import demoInput from "./demoInput.js";
 import Output from "./Output.js";
 import "./App.css";
 
@@ -16,13 +17,11 @@ type State = {
 };
 
 export default class App extends PureComponent<Props, State> {
-  defaultJsInput = "// Type some JavaScript in here\n";
-
   state: State = {
     jsInput:
       typeof window !== "undefined"
-        ? window.sessionStorage.getItem("jsInput") || this.defaultJsInput
-        : this.defaultJsInput,
+        ? window.sessionStorage.getItem("jsInput") || demoInput
+        : demoInput,
   };
 
   onChangeJsInput = (event: SyntheticEvent<HTMLTextAreaElement>) => {
