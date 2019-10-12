@@ -1,12 +1,6 @@
 // @flow
-import {compileAndPrint} from "../compiler/index.js";
 
-it("handles basics", () => {
-  expect(
-    compileAndPrint(
-      `// Some examples
-
-type Rec = {
+export default `type Rec = {
   a: string,
   b: number,
   c: boolean
@@ -53,8 +47,4 @@ const f = function<A> (x : A, y : A): bool {
 }
 
 const arrow = x => x + 1;
-`,
-      40,
-    ),
-  ).toMatchSnapshot();
-});
+`;
