@@ -27,6 +27,12 @@
   overflow: auto;
 }
 
+h1 {
+  margin-left: 10px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
 textarea {
   box-sizing: border-box;
   border: none;

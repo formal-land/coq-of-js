@@ -74,17 +74,10 @@ export default class App extends PureComponent<Props, State> {
   }
 
   getCoqString(coqAst: Program.t): string {
-    const coqProgram: string = doc.printer.printDocToString(
-      Program.print(coqAst),
-      {
-        printWidth: 40,
-        tabWidth: 2,
-      },
-    ).formatted;
-
-    return `(* Generated Coq *)
-
-${coqProgram}`;
+    return doc.printer.printDocToString(Program.print(coqAst), {
+      printWidth: 60,
+      tabWidth: 2,
+    }).formatted;
   }
 
   render() {
@@ -98,15 +91,19 @@ ${coqProgram}`;
     return (
       <div>
         <div className="split js-source">
+          <h1>JavaScript editor</h1>
           <textarea onChange={this.onChangeJsInput} value={jsInput} />
         </div>
         <div className="split js-ast">
+          <h1>JavaScript AST</h1>
           <Output output={jsAst} />
         </div>
         <div className="split coq-ast">
+          <h1>Coq AST</h1>
           <Output output={coqAst} />
         </div>
         <div className="split coq-source">
+          <h1>Generated Coq</h1>
           <Output output={coqString} />
         </div>
       </div>
