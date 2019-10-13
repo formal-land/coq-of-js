@@ -1192,42 +1192,42 @@ export type Block = BlockStatement | Program;
 export type Statement =
   | BlockStatement
   | BreakStatement
+  | ClassDeclaration
   | ContinueStatement
   | DebuggerStatement
-  | DoWhileStatement
-  | EmptyStatement
-  | ExpressionStatement
-  | ForInStatement
-  | ForStatement
-  | FunctionDeclaration
-  | IfStatement
-  | LabeledStatement
-  | ReturnStatement
-  | SwitchStatement
-  | ThrowStatement
-  | TryStatement
-  | VariableDeclaration
-  | WhileStatement
-  | WithStatement
-  | ClassDeclaration
-  | ExportAllDeclaration
-  | ExportDefaultDeclaration
-  | ExportNamedDeclaration
-  | ForOfStatement
-  | ImportDeclaration
   | DeclareClass
+  | DeclareExportAllDeclaration
+  | DeclareExportDeclaration
   | DeclareFunction
   | DeclareInterface
   | DeclareModule
   | DeclareModuleExports
-  | DeclareTypeAlias
   | DeclareOpaqueType
+  | DeclareTypeAlias
   | DeclareVariable
-  | DeclareExportDeclaration
-  | DeclareExportAllDeclaration
+  | DoWhileStatement
+  | EmptyStatement
+  | ExportAllDeclaration
+  | ExportDefaultDeclaration
+  | ExportNamedDeclaration
+  | ExpressionStatement
+  | ForInStatement
+  | ForOfStatement
+  | ForStatement
+  | FunctionDeclaration
+  | IfStatement
+  | ImportDeclaration
   | InterfaceDeclaration
+  | LabeledStatement
   | OpaqueType
-  | TypeAlias;
+  | ReturnStatement
+  | SwitchStatement
+  | ThrowStatement
+  | TryStatement
+  | TypeAlias
+  | VariableDeclaration
+  | WhileStatement
+  | WithStatement;
 export type Terminatorless =
   | BreakStatement
   | ContinueStatement
