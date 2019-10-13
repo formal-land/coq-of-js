@@ -199,7 +199,6 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
           );
       }
     }
-    /* istanbul ignore next */
     default:
       return yield* Monad.raiseUnhandled<t>(typ);
   }
@@ -352,6 +351,7 @@ export function print(name: string, typDefinition: t): Doc.t {
           Doc.indent(Doc.concat([Doc.line, Typ.print(typDefinition.typ), "."])),
         ]),
       );
+    /* istanbul ignore next */
     default:
       return typDefinition;
   }
