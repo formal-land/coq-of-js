@@ -16,12 +16,19 @@ type State = {
   jsInput: string,
 };
 
+function getInitialJsInput(): string {
+  if (typeof window !== "undefined") {
+    const item = window.sessionStorage.getItem("jsInput");
+
+    return typeof item === "string" ? item : demoInput;
+  }
+
+  return demoInput;
+}
+
 export default class App extends PureComponent<Props, State> {
   state: State = {
-    jsInput:
-      typeof window !== "undefined"
-        ? window.sessionStorage.getItem("jsInput") || demoInput
-        : demoInput,
+    jsInput: getInitialJsInput(),
   };
 
   onChangeJsInput = (event: SyntheticEvent<HTMLTextAreaElement>) => {
