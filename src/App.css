@@ -2,32 +2,33 @@
   background-color: #24292e;
   color: white;
   margin: 0px;
-  padding: 20px;
+  padding: 20px 15px 20px 15px;
 }
 
 .header h1 {
   margin: 0px;
+  font-size: 26px;
 }
 
 .header h1 .logo {
-  margin-right: 10px;
+  margin-right: 7px;
 }
 
 .header h1 .sub-title {
   color: white;
-  font-size: 20px;
+  font-size: 16px;
   margin-left: 20px;
 }
 
 .split {
   width: 25%;
   position: fixed;
-  top: 77px;
+  top: 70px;
   bottom: 0px;
 }
 
 .js-source {
-  bottom: 40px;
+  bottom: 30px;
   left: 0%;
 }
 
