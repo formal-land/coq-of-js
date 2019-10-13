@@ -14,29 +14,70 @@ type o = {};
 type e = empty;
 `,
       ),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "Definition b : Type := bool.
+
+      Definition s : Type := string.
+
+      Definition v : Type := unit.
+
+      Definition n : Type := unit.
+
+      Definition f : Type := Z.
+
+      Definition o : Type := unit.
+
+      Definition e : Type := Empty_set."
+    `);
   });
 });
 
 describe("enums", () => {
   it("handles type definition of enums", () => {
-    expect(
-      compileAndPrint(`type SayHi = "hi" | 'hello' | "h";`),
-    ).toMatchSnapshot();
+    expect(compileAndPrint(`type SayHi = "hi" | 'hello' | "h";`))
+      .toMatchInlineSnapshot(`
+      "Module SayHi.
+        Inductive t :=
+        | hi
+        | hello
+        | h.
+      End SayHi.
+      Definition SayHi := SayHi.t."
+    `);
 
-    expect(compileAndPrint('type Single = "s";')).toMatchSnapshot();
+    expect(compileAndPrint('type Single = "s";')).toMatchInlineSnapshot(`
+      "Module Single.
+        Inductive t :=
+        | s.
+      End Single.
+      Definition Single := Single.t."
+    `);
   });
 
   it("does not handle other elements than strings", () => {
-    expect(
-      compileAndPrint(`type SayHi = "hi" | 'hello' | 12;`),
-    ).toMatchSnapshot();
+    expect(compileAndPrint(`type SayHi = "hi" | 'hello' | 12;`))
+      .toMatchInlineSnapshot(`
+      "> 1 | type SayHi = \\"hi\\" | 'hello' | 12;
+          |                              ^^
+
+      Only strings are handled in enums"
+    `);
   });
 
   it("does not handle other literals than string", () => {
-    expect(compileAndPrint(`type Boo = false;`)).toMatchSnapshot();
+    expect(compileAndPrint(`type Boo = false;`)).toMatchInlineSnapshot(`
+      "> 1 | type Boo = false;
+          |           ^^^^^
 
-    expect(compileAndPrint(`type Num = 12;`)).toMatchSnapshot();
+      Boolean literals in types are not handled"
+    `);
+
+    expect(compileAndPrint(`type Num = 12;`)).toMatchInlineSnapshot(`
+      "> 1 | type Num = 12;
+          |           ^^
+
+      Number literals in types are not handled"
+    `);
   });
 });
 
@@ -48,7 +89,15 @@ describe("records", () => {
   quantity: number,
 };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "Module Status.
+        Record t := {
+          message : string;
+          quantity : Z;
+        }.
+      End Status.
+      Definition Status := Status.t."
+    `);
   });
 
   it("does not handle spreads", () => {
@@ -59,7 +108,16 @@ describe("records", () => {
   ...A,
 };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "  2 |   message: string,
+        3 |   quantity: number,
+      > 4 |   ...A,
+          |  ^^^^
+        5 | };
+        6 | 
+
+      Expected named property"
+    `);
   });
 });
 
@@ -83,7 +141,29 @@ describe("sum types", () => {
       "value": string,
     };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "Module Status.
+        Module Error.
+          Record t := {
+            message : string;
+          }.
+        End Error.
+
+        Module Success.
+          Record t := {
+            fresh : bool;
+            value : string;
+          }.
+        End Success.
+
+        Inductive t :=
+        | Error (_ : Error.t)
+        | Loading
+        | Nothing
+        | Success (_ : Success.t).
+      End Status.
+      Definition Status := Status.t."
+    `);
 
     expect(
       compileAndPrint(`type Status =
@@ -92,7 +172,19 @@ describe("sum types", () => {
       message: string,
     };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "Module Status.
+        Module Error.
+          Record t := {
+            message : string;
+          }.
+        End Error.
+
+        Inductive t :=
+        | Error (_ : Error.t).
+      End Status.
+      Definition Status := Status.t."
+    `);
   });
 
   it("shows errors for sum types", () => {
@@ -105,7 +197,20 @@ describe("sum types", () => {
       type: "Loading",
     };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "  1 | type Status =
+      > 2 |   | {
+          |    ^
+      > 3 |       message: string,
+          | ^^^^^^^^^^^^^^^^^^^^^^
+      > 4 |     }
+          | ^^^^^
+        5 |   | {
+        6 |       type: \\"Loading\\",
+        7 |     };
+
+      Expected at least one field with the name \`type\`"
+    `);
 
     expect(
       compileAndPrint(`type Status =
@@ -117,7 +222,16 @@ describe("sum types", () => {
       type: number,
     };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "  5 |     }
+        6 |   | {
+      > 7 |       type: number,
+          |            ^^^^^^
+        8 |     };
+        9 | 
+
+      Expected a string literal"
+    `);
 
     expect(
       compileAndPrint(`type Status =
@@ -126,7 +240,16 @@ describe("sum types", () => {
       ...A,
     };
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "  2 |   | {
+        3 |     type: \\"Spread\\",
+      > 4 |       ...A,
+          |      ^^^^
+        5 |     };
+        6 | 
+
+      Expected a named property"
+    `);
 
     expect(
       compileAndPrint(`type Status =
@@ -135,8 +258,22 @@ describe("sum types", () => {
     }
   | string;
 `),
-    ).toMatchSnapshot();
+    ).toMatchInlineSnapshot(`
+      "  3 |     type: \\"Spread\\",
+        4 |     }
+      > 5 |   | string;
+          |    ^^^^^^
+        6 | 
 
-    expect(compileAndPrint(`type Status = number | string;`)).toMatchSnapshot();
+      Only objects are handled in sum types"
+    `);
+
+    expect(compileAndPrint(`type Status = number | string;`))
+      .toMatchInlineSnapshot(`
+      "> 1 | type Status = number | string;
+          |              ^^^^^^^^^^^^^^^
+
+      Only handle unions of strings or objects with a \`type\` field"
+    `);
   });
 });
