@@ -3,6 +3,7 @@ import React, {PureComponent} from "react";
 import codeFrame from "babel-code-frame";
 import {parse} from "@babel/parser";
 import doc from "prettier/doc.js";
+import * as BabelAst from "./compiler/babel-ast.js";
 import * as Error from "./compiler/error.js";
 import * as Monad from "./compiler/monad.js";
 import * as Program from "./compiler/program.js";
@@ -41,7 +42,7 @@ export default class App extends PureComponent<Props, State> {
     }
   };
 
-  getJsAst(jsInput: string): any | string {
+  getJsAst(jsInput: string): BabelAst.File | string {
     try {
       const ast = parse(jsInput, {
         plugins: ["flow", "jsx"],
@@ -52,17 +53,11 @@ export default class App extends PureComponent<Props, State> {
     } catch (error) {
       const {loc} = error;
 
-      if (loc) {
-        return `${error.message}\n\n${codeFrame(
-          jsInput,
-          loc.line,
-          loc.column,
-        )}`;
-      }
+      return `${error.message}\n\n${codeFrame(jsInput, loc.line, loc.column)}`;
     }
   }
 
-  getCoqAst(source: string, jsAst: any): any | string {
+  getCoqAst(source: string, jsAst: BabelAst.File): Program.t | string {
     try {
       const result = Monad.run(Program.compile(jsAst.program));
 
@@ -86,13 +81,29 @@ export default class App extends PureComponent<Props, State> {
     }).formatted;
   }
 
+  getOutputs(jsInput: string): {coq: string, coqAst: string, jsAst: string} {
+    const jsAst = this.getJsAst(jsInput);
+
+    if (typeof jsAst === "string") {
+      return {coq: jsAst, coqAst: "", jsAst: ""};
+    }
+
+    const coqAst = this.getCoqAst(jsInput, jsAst);
+
+    if (typeof coqAst === "string") {
+      return {coq: coqAst, coqAst: "", jsAst: ""};
+    }
+
+    return {
+      coq: this.getCoqString(coqAst),
+      coqAst: JSON.stringify(coqAst, null, 2),
+      jsAst: JSON.stringify(jsAst, null, 2),
+    };
+  }
+
   render() {
     const {jsInput} = this.state;
-    const jsAst = this.getJsAst(jsInput);
-    const coqAst =
-      typeof jsAst !== "string" ? this.getCoqAst(jsInput, jsAst) : "";
-    const coqString =
-      typeof coqAst !== "string" ? this.getCoqString(coqAst) : "";
+    const {coq, coqAst, jsAst} = this.getOutputs(jsInput);
 
     return (
       <div>
@@ -105,14 +116,6 @@ export default class App extends PureComponent<Props, State> {
           </h1>
           <textarea onChange={this.onChangeJsInput} value={jsInput} />
         </div>
-        <div className="split js-ast">
-          <h1>JavaScript AST</h1>
-          <Output output={jsAst} />
-        </div>
-        <div className="split coq-ast">
-          <h1>Coq AST</h1>
-          <Output output={coqAst} />
-        </div>
         <div className="split coq-source">
           <h1>
             <span aria-label="rooster" role="img">
@@ -120,7 +123,15 @@ export default class App extends PureComponent<Props, State> {
             </span>{" "}
             Generated Coq
           </h1>
-          <Output output={coqString} />
+          <Output output={coq} />
+        </div>
+        <div className="split js-ast">
+          <h1>JavaScript AST</h1>
+          <Output output={jsAst} />
+        </div>
+        <div className="split coq-ast">
+          <h1>Coq AST</h1>
+          <Output output={coqAst} />
         </div>
       </div>
     );

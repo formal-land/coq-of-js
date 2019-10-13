@@ -2,7 +2,7 @@
 import React, {PureComponent} from "react";
 
 type Props = {
-  output: any | string,
+  output: string,
 };
 
 export default class CoqOutput extends PureComponent<Props> {
@@ -11,11 +11,7 @@ export default class CoqOutput extends PureComponent<Props> {
 
     return (
       <code>
-        <pre>
-          {typeof output !== "string"
-            ? JSON.stringify(output, null, 2)
-            : output}
-        </pre>
+        <pre>{output}</pre>
       </code>
     );
   }
