@@ -6,23 +6,23 @@
 }
 
 .js-source {
-  left: 0;
+  left: 0%;
 }
 
-.js-ast {
+.coq-source {
   left: 25%;
   border-left: 1px solid grey;
   overflow: auto;
 }
 
-.coq-ast {
+.js-ast {
   left: 50%;
   border-left: 1px solid grey;
   overflow: auto;
 }
 
-.coq-source {
-  right: 0;
+.coq-ast {
+  left: 75%;
   border-left: 1px solid grey;
   overflow: auto;
 }
@@ -30,6 +30,10 @@
 @media (max-width: 768px) {
   .split {
     width: 50%;
+  }
+
+  .coq-source {
+    left: 50%;
   }
 
   .js-ast, .coq-ast {
