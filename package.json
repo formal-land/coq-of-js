@@ -7,11 +7,11 @@
     "prettier": "^1.18.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "react-scripts": "3.1.0"
+    "react-scripts": "^3.2.0"
   },
   "scripts": {
     "build": "react-scripts build",
-    "coverage": "react-scripts test --coverage --collect-coverage-from=src/compiler/**/*.js --watchAll=false src/compiler",
+    "coverage": "react-scripts test --coverage --collect-coverage-from=src/compiler/**/*.js src/compiler",
     "deploy": "gh-pages -d build",
     "eject": "react-scripts eject",
     "flow": "flow",
