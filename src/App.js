@@ -107,30 +107,36 @@ export default class App extends PureComponent<Props, State> {
 
     return (
       <div>
-        <div className="split js-source">
+        <div className="header">
           <h1>
-            <span aria-label="globe" role="img">
-              🌍
-            </span>{" "}
-            JavaScript editor
+            <span className="logo">
+              <span aria-label="globe" role="img">
+                🌍
+              </span>{" "}
+              <span aria-label="rooster" role="img">
+                🐓
+              </span>
+            </span>
+            coq-of-js
+            <a className="sub-title" href="https://github.com/clarus/coq-of-js">
+              Sources
+            </a>
           </h1>
+        </div>
+        <div className="split js-source">
+          <h2>JavaScript editor</h2>
           <textarea onChange={this.onChangeJsInput} value={jsInput} />
         </div>
         <div className="split coq-source">
-          <h1>
-            <span aria-label="rooster" role="img">
-              🐓
-            </span>{" "}
-            Generated Coq
-          </h1>
+          <h2>Generated Coq</h2>
           <Output output={coq} />
         </div>
         <div className="split js-ast">
-          <h1>JavaScript AST</h1>
+          <h2>JavaScript AST</h2>
           <Output output={jsAst} />
         </div>
         <div className="split coq-ast">
-          <h1>Coq AST</h1>
+          <h2>Coq AST</h2>
           <Output output={coqAst} />
         </div>
       </div>

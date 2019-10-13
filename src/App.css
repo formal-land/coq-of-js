@@ -1,11 +1,33 @@
+.header {
+  background-color: #24292e;
+  color: white;
+  margin: 0px;
+  padding: 20px;
+}
+
+.header h1 {
+  margin: 0px;
+}
+
+.header h1 .logo {
+  margin-right: 10px;
+}
+
+.header h1 .sub-title {
+  color: white;
+  font-size: 20px;
+  margin-left: 20px;
+}
+
 .split {
-  height: 100%;
   width: 25%;
   position: fixed;
-  top: 0;
+  top: 77px;
+  bottom: 0px;
 }
 
 .js-source {
+  bottom: 40px;
   left: 0%;
 }
 
@@ -19,12 +41,14 @@
   left: 50%;
   border-left: 1px solid grey;
   overflow: auto;
+  background-color: whitesmoke;
 }
 
 .coq-ast {
   left: 75%;
   border-left: 1px solid grey;
   overflow: auto;
+  background-color: whitesmoke;
 }
 
 @media (max-width: 768px) {
@@ -41,7 +65,7 @@
   }
 }
 
-h1 {
+h2 {
   font-size: 16px;
   font-weight: 500;
   margin-left: 10px;
