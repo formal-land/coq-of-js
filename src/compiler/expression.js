@@ -135,11 +135,22 @@ function* getObjectPropertyName(
 
 function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
   switch (lval.type) {
+    case "ArrayPattern":
+      return yield* Monad.raise<LeftValue>(lval, "Unhandled array patterns");
+    /* istanbul ignore next */
+    case "AssignmentPattern":
+      return yield* Monad.raise<LeftValue>(
+        lval,
+        "Unexpected assignment patterns",
+      );
     case "Identifier":
       return {
         type: "Variable",
         name: Identifier.compile(lval),
       };
+    /* istanbul ignore next */
+    case "MemberExpression":
+      return yield* Monad.raise<LeftValue>(lval, "Unexpected member access");
     case "ObjectPattern": {
       const typName = lval.typeAnnotation
         ? yield* Typ.compileIdentifier(lval.typeAnnotation.typeAnnotation)
@@ -181,8 +192,12 @@ function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
         record: typName,
       };
     }
+    /* istanbul ignore next */
+    case "RestElement":
+      return yield* Monad.raise<LeftValue>(lval, "Unexpected rest elements");
+    /* istanbul ignore next */
     default:
-      return yield* Monad.raise<LeftValue>(lval, "Unhandled left value");
+      return lval;
   }
 }
 
@@ -330,7 +345,11 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
                 return yield* compile(element);
               }),
             )
-          : yield* Monad.raise<t[]>(expression, "Expected an array expression"),
+          : /* istanbul ignore next */
+            yield* Monad.raise<t[]>(
+              expression,
+              "Unexpected empty array expression",
+            ),
       };
     case "ArrowFunctionExpression":
       return {
@@ -356,11 +375,16 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
           expression.arguments.map(function*(argument) {
             switch (argument.type) {
               case "ArgumentPlaceholder":
+                return yield* Monad.raise<t>(
+                  argument,
+                  "Unhandled partial application",
+                );
               case "JSXNamespacedName":
+                return yield* Monad.raiseUnhandled<t>(argument);
               case "SpreadElement":
                 return yield* Monad.raise<t>(
                   argument,
-                  "Unhandled function argument",
+                  "Unhandled spread parameters",
                 );
               default:
                 return yield* compile(argument);
@@ -433,6 +457,7 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         "Unhandled object expression without type annotation",
       );
     }
+    /* istanbul ignore next */
     case "ParenthesizedExpression":
       return yield* compile(expression.expression);
     case "StringLiteral":

@@ -1115,44 +1115,44 @@ export type BigIntLiteral = Node & {
 
 export type Expression =
   | ArrayExpression
+  | ArrowFunctionExpression
   | AssignmentExpression
+  | AwaitExpression
+  | BigIntLiteral
   | BinaryExpression
+  | BindExpression
+  | BooleanLiteral
   | CallExpression
+  | ClassExpression
   | ConditionalExpression
+  | DoExpression
   | FunctionExpression
   | Identifier
-  | StringLiteral
-  | NumericLiteral
-  | NullLiteral
-  | BooleanLiteral
-  | RegExpLiteral
+  | Import
+  | JSXElement
+  | JSXFragment
   | LogicalExpression
   | MemberExpression
-  | NewExpression
-  | ObjectExpression
-  | SequenceExpression
-  | ParenthesizedExpression
-  | ThisExpression
-  | UnaryExpression
-  | UpdateExpression
-  | ArrowFunctionExpression
-  | ClassExpression
   | MetaProperty
+  | NewExpression
+  | NullLiteral
+  | NumericLiteral
+  | ObjectExpression
+  | OptionalCallExpression
+  | OptionalMemberExpression
+  | ParenthesizedExpression
+  | PipelinePrimaryTopicReference
+  | RegExpLiteral
+  | SequenceExpression
+  | StringLiteral
   | Super
   | TaggedTemplateExpression
   | TemplateLiteral
-  | YieldExpression
+  | ThisExpression
   | TypeCastExpression
-  | JSXElement
-  | JSXFragment
-  | AwaitExpression
-  | BindExpression
-  | OptionalMemberExpression
-  | PipelinePrimaryTopicReference
-  | OptionalCallExpression
-  | Import
-  | DoExpression
-  | BigIntLiteral;
+  | UnaryExpression
+  | UpdateExpression
+  | YieldExpression;
 export type Binary = BinaryExpression | LogicalExpression;
 export type Scopable =
   | BlockStatement

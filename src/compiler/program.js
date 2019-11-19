@@ -20,7 +20,7 @@ export function* compile(program: BabelAst.Program): Monad.t<t> {
   );
 }
 
-export function print(program: t, withHeader: boolean = false): Doc.t {
+export function print(program: t, withHeader: boolean): Doc.t {
   return Doc.group(
     Doc.join(Doc.concat([Doc.hardline, Doc.hardline]), [
       ...(withHeader

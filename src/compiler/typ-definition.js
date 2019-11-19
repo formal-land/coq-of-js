@@ -173,6 +173,7 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
     case "StringLiteralTypeAnnotation":
       return yield* compileStringEnum([typ]);
     case "UnionTypeAnnotation": {
+      /* istanbul ignore next */
       if (typ.types.length === 0) {
         return {
           type: "Synonym",
