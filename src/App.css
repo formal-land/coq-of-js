@@ -42,14 +42,14 @@
   left: 50%;
   border-left: 1px solid grey;
   overflow: auto;
-  background-color: whitesmoke;
+  background-color: lightgrey;
 }
 
 .coq-ast {
   left: 75%;
   border-left: 1px solid grey;
   overflow: auto;
-  background-color: whitesmoke;
+  background-color: lightgrey;
 }
 
 @media (max-width: 768px) {
