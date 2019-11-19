@@ -379,8 +379,6 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
                   argument,
                   "Unhandled partial application",
                 );
-              case "JSXNamespacedName":
-                return yield* Monad.raiseUnhandled<t>(argument);
               case "SpreadElement":
                 return yield* Monad.raise<t>(
                   argument,
