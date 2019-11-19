@@ -1,6 +1,6 @@
 // @flow
 
-export default `// Basic definitions //
+export default `/* Basic definitions */
 
 const
   b: boolean = false && true,
@@ -12,8 +12,7 @@ const a = [1, (2 : number), 3];
 
 const cond = b ? "a" : 'b';
 
-
-// Functions //
+/* Functions */
 
 function id<A>(x: A): A {
   return x;
@@ -31,8 +30,7 @@ const f = function<A> (x : A, y : A): bool {
 
 const arrow = x => x + 1;
 
-
-// Records //
+/* Records */
 
 type Rec = {
   a: string,
@@ -44,8 +42,29 @@ const o = ({a: "hi", b: 12, c: false}: Rec);
 
 const hi = (o: Rec).a;
 
+const getHi = (o: Rec) => {
+  const {a: hi}: Rec = o;
+  return hi;
+};
 
-// Sum types //
+/* Enums */
+
+type Enum = "aa" | "bb" | "gg";
+
+const aa = ("aa": Enum);
+
+function getEnumIndex(e: Enum): number {
+  switch ((e: Enum)) {
+    case "aa":
+      return 0;
+    case "bb":
+      return 1;
+    case "cc":
+      return 2;
+  }
+}
+
+/* Sum types */
 
 type Status =
   | {

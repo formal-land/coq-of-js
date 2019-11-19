@@ -7,10 +7,11 @@ import * as Program from "./program.js";
 
 export function compileAndPrint(
   jsInput: string,
-  printWidth: number = 80,
+  withHeader: boolean = false,
 ): string {
+  const printWidth = 80;
   const jsAst = parse(jsInput, {
-    plugins: ["flow", "jsx"],
+    plugins: ["flow", "jsx", "partialApplication"],
     sourceType: "module",
   });
   const coqAst = Monad.run(Program.compile(jsAst.program));
@@ -19,10 +20,13 @@ export function compileAndPrint(
     case "Error":
       return Error.print(jsInput, coqAst.errors);
     case "Success":
-      return doc.printer.printDocToString(Program.print(coqAst.value), {
-        printWidth,
-        tabWidth: 2,
-      }).formatted;
+      return doc.printer.printDocToString(
+        Program.print(coqAst.value, withHeader),
+        {
+          printWidth,
+          tabWidth: 2,
+        },
+      ).formatted;
     /* istanbul ignore next */
     default:
       return coqAst;

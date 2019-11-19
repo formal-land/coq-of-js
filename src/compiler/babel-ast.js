@@ -113,9 +113,7 @@ export type BreakStatement = Node & {
 export type CallExpression = Node & {
   type: "CallExpression",
   callee: Expression,
-  arguments: Array<
-    Expression | SpreadElement | JSXNamespacedName | ArgumentPlaceholder,
-  >,
+  arguments: Array<Expression | SpreadElement | ArgumentPlaceholder>,
   optional?: true | false,
   typeArguments?: TypeParameterInstantiation,
 };
@@ -266,9 +264,7 @@ export type MemberExpression = Node & {
 export type NewExpression = Node & {
   type: "NewExpression",
   callee: Expression,
-  arguments: Array<
-    Expression | SpreadElement | JSXNamespacedName | ArgumentPlaceholder,
-  >,
+  arguments: Array<Expression | SpreadElement | ArgumentPlaceholder>,
   optional?: true | false,
   typeArguments?: TypeParameterInstantiation,
 };
@@ -887,101 +883,6 @@ export type VoidTypeAnnotation = Node & {
   type: "VoidTypeAnnotation",
 };
 
-export type JSXAttribute = Node & {
-  type: "JSXAttribute",
-  name: JSXIdentifier | JSXNamespacedName,
-  value?: JSXElement | JSXFragment | StringLiteral | JSXExpressionContainer,
-};
-
-export type JSXClosingElement = Node & {
-  type: "JSXClosingElement",
-  name: JSXIdentifier | JSXMemberExpression,
-};
-
-export type JSXElement = Node & {
-  type: "JSXElement",
-  openingElement: JSXOpeningElement,
-  closingElement?: JSXClosingElement,
-  children: Array<
-    | JSXText
-    | JSXExpressionContainer
-    | JSXSpreadChild
-    | JSXElement
-    | JSXFragment,
-  >,
-  selfClosing: any,
-};
-
-export type JSXEmptyExpression = Node & {
-  type: "JSXEmptyExpression",
-};
-
-export type JSXExpressionContainer = Node & {
-  type: "JSXExpressionContainer",
-  expression: Expression | JSXEmptyExpression,
-};
-
-export type JSXSpreadChild = Node & {
-  type: "JSXSpreadChild",
-  expression: Expression,
-};
-
-export type JSXIdentifier = Node & {
-  type: "JSXIdentifier",
-  name: string,
-};
-
-export type JSXMemberExpression = Node & {
-  type: "JSXMemberExpression",
-  object: JSXMemberExpression | JSXIdentifier,
-  property: JSXIdentifier,
-};
-
-export type JSXNamespacedName = Node & {
-  type: "JSXNamespacedName",
-  namespace: JSXIdentifier,
-  name: JSXIdentifier,
-};
-
-export type JSXOpeningElement = Node & {
-  type: "JSXOpeningElement",
-  name: JSXIdentifier | JSXMemberExpression,
-  attributes: Array<JSXAttribute | JSXSpreadAttribute>,
-  selfClosing?: boolean,
-  typeParameters?: TypeParameterInstantiation,
-};
-
-export type JSXSpreadAttribute = Node & {
-  type: "JSXSpreadAttribute",
-  argument: Expression,
-};
-
-export type JSXText = Node & {
-  type: "JSXText",
-  value: string,
-};
-
-export type JSXFragment = Node & {
-  type: "JSXFragment",
-  openingFragment: JSXOpeningFragment,
-  closingFragment: JSXClosingFragment,
-  children: Array<
-    | JSXText
-    | JSXExpressionContainer
-    | JSXSpreadChild
-    | JSXElement
-    | JSXFragment,
-  >,
-};
-
-export type JSXOpeningFragment = Node & {
-  type: "JSXOpeningFragment",
-};
-
-export type JSXClosingFragment = Node & {
-  type: "JSXClosingFragment",
-};
-
 export type Placeholder = Node & {
   type: "Placeholder",
   expectedNode:
@@ -1050,7 +951,7 @@ export type PipelinePrimaryTopicReference = Node & {
 export type OptionalCallExpression = Node & {
   type: "OptionalCallExpression",
   callee: Expression,
-  arguments: Array<Expression | SpreadElement | JSXNamespacedName>,
+  arguments: Array<Expression | SpreadElement>,
   optional: boolean,
   typeArguments?: TypeParameterInstantiation,
 };
@@ -1115,44 +1016,42 @@ export type BigIntLiteral = Node & {
 
 export type Expression =
   | ArrayExpression
+  | ArrowFunctionExpression
   | AssignmentExpression
+  | AwaitExpression
+  | BigIntLiteral
   | BinaryExpression
+  | BindExpression
+  | BooleanLiteral
   | CallExpression
+  | ClassExpression
   | ConditionalExpression
+  | DoExpression
   | FunctionExpression
   | Identifier
-  | StringLiteral
-  | NumericLiteral
-  | NullLiteral
-  | BooleanLiteral
-  | RegExpLiteral
+  | Import
   | LogicalExpression
   | MemberExpression
-  | NewExpression
-  | ObjectExpression
-  | SequenceExpression
-  | ParenthesizedExpression
-  | ThisExpression
-  | UnaryExpression
-  | UpdateExpression
-  | ArrowFunctionExpression
-  | ClassExpression
   | MetaProperty
+  | NewExpression
+  | NullLiteral
+  | NumericLiteral
+  | ObjectExpression
+  | OptionalCallExpression
+  | OptionalMemberExpression
+  | ParenthesizedExpression
+  | PipelinePrimaryTopicReference
+  | RegExpLiteral
+  | SequenceExpression
+  | StringLiteral
   | Super
   | TaggedTemplateExpression
   | TemplateLiteral
-  | YieldExpression
+  | ThisExpression
   | TypeCastExpression
-  | JSXElement
-  | JSXFragment
-  | AwaitExpression
-  | BindExpression
-  | OptionalMemberExpression
-  | PipelinePrimaryTopicReference
-  | OptionalCallExpression
-  | Import
-  | DoExpression
-  | BigIntLiteral;
+  | UnaryExpression
+  | UpdateExpression
+  | YieldExpression;
 export type Binary = BinaryExpression | LogicalExpression;
 export type Scopable =
   | BlockStatement
@@ -1322,21 +1221,11 @@ export type Literal =
   | TemplateLiteral
   | BigIntLiteral;
 export type Immutable =
-  | StringLiteral
-  | NumericLiteral
-  | NullLiteral
+  | BigIntLiteral
   | BooleanLiteral
-  | JSXAttribute
-  | JSXClosingElement
-  | JSXElement
-  | JSXExpressionContainer
-  | JSXSpreadChild
-  | JSXOpeningElement
-  | JSXText
-  | JSXFragment
-  | JSXOpeningFragment
-  | JSXClosingFragment
-  | BigIntLiteral;
+  | NullLiteral
+  | NumericLiteral
+  | StringLiteral;
 export type UserWhitespacable =
   | ObjectMethod
   | ObjectProperty
@@ -1470,20 +1359,4 @@ export type FlowDeclaration =
   | OpaqueType
   | TypeAlias;
 export type FlowPredicate = DeclaredPredicate | InferredPredicate;
-export type JSX =
-  | JSXAttribute
-  | JSXClosingElement
-  | JSXElement
-  | JSXEmptyExpression
-  | JSXExpressionContainer
-  | JSXSpreadChild
-  | JSXIdentifier
-  | JSXMemberExpression
-  | JSXNamespacedName
-  | JSXOpeningElement
-  | JSXSpreadAttribute
-  | JSXText
-  | JSXFragment
-  | JSXOpeningFragment
-  | JSXClosingFragment;
 export type Private = ClassPrivateProperty | ClassPrivateMethod | PrivateName;

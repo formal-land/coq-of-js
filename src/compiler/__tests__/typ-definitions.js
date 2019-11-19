@@ -277,3 +277,29 @@ describe("sum types", () => {
     `);
   });
 });
+
+describe("existential types", () => {
+  it("does not handle existential types", () => {
+    expect(compileAndPrint(`type t = *;`)).toMatchInlineSnapshot(`
+      "> 1 | type t = *;
+          |         ^
+
+      Unhandled syntax:
+      {
+        \\"type\\": \\"ExistsTypeAnnotation\\",
+        \\"start\\": 9,
+        \\"end\\": 10,
+        \\"loc\\": {
+          \\"start\\": {
+            \\"line\\": 1,
+            \\"column\\": 9
+          },
+          \\"end\\": {
+            \\"line\\": 1,
+            \\"column\\": 10
+          }
+        }
+      }"
+    `);
+  });
+});

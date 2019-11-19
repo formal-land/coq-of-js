@@ -27,7 +27,9 @@ function compileIdentifierOrQualifiedTypeIdentifier(
     case "Identifier":
       return Identifier.compile(id);
     case "QualifiedTypeIdentifier":
-      return Identifier.compile(id.id);
+      return `${compileIdentifierOrQualifiedTypeIdentifier(
+        id.qualification,
+      )}.${Identifier.compile(id.id)}`;
     /* istanbul ignore next */
     default:
       return id;

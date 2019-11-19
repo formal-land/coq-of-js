@@ -85,12 +85,21 @@ describe("function calls", () => {
     `);
   });
 
+  it("does not handle partial application", () => {
+    expect(compileAndPrint(`const n = f(?, a);`)).toMatchInlineSnapshot(`
+      "> 1 | const n = f(?, a);
+          |            ^
+
+      Unhandled partial application"
+    `);
+  });
+
   it("does not handle spread parameters", () => {
     expect(compileAndPrint(`const n = f(...a);`)).toMatchInlineSnapshot(`
       "> 1 | const n = f(...a);
           |            ^^^^
 
-      Unhandled function argument"
+      Unhandled spread parameters"
     `);
   });
 });
@@ -137,6 +146,51 @@ describe("member accesses", () => {
           |          ^
 
       Expected a type annotation on this object to access a member"
+    `);
+  });
+});
+
+describe("new expressions", () => {
+  it("does not hande new expressions", () => {
+    expect(compileAndPrint(`const x = new Foo();`)).toMatchInlineSnapshot(`
+      "> 1 | const x = new Foo();
+          |          ^^^^^^^^^
+
+      Unhandled syntax:
+      {
+        \\"type\\": \\"NewExpression\\",
+        \\"start\\": 10,
+        \\"end\\": 19,
+        \\"loc\\": {
+          \\"start\\": {
+            \\"line\\": 1,
+            \\"column\\": 10
+          },
+          \\"end\\": {
+            \\"line\\": 1,
+            \\"column\\": 19
+          }
+        },
+        \\"callee\\": {
+          \\"type\\": \\"Identifier\\",
+          \\"start\\": 14,
+          \\"end\\": 17,
+          \\"loc\\": {
+            \\"start\\": {
+              \\"line\\": 1,
+              \\"column\\": 14
+            },
+            \\"end\\": {
+              \\"line\\": 1,
+              \\"column\\": 17
+            },
+            \\"identifierName\\": \\"Foo\\"
+          },
+          \\"name\\": \\"Foo\\"
+        },
+        \\"typeArguments\\": null,
+        \\"arguments\\": []
+      }"
     `);
   });
 });

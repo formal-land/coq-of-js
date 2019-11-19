@@ -1,7 +1,7 @@
 # 🌍 🐓 coq-of-js
 > Import JavaScript programs to Coq. Prove all the things! 🐓
 
-[![travis status](https://img.shields.io/travis/clarus/coq-of-js/master.svg?label=travis-ci&style=flat-square)](https://travis-ci.org/clarus/coq-of-js)
+[![travis status](https://img.shields.io/travis/com/clarus/coq-of-js/master.svg?label=travis-ci&style=flat-square)](https://travis-ci.org/clarus/coq-of-js)
 [![codecov status](https://img.shields.io/codecov/c/github/clarus/coq-of-js.svg?style=flat-square)](https://codecov.io/gh/clarus/coq-of-js)
 
 **Online demo: https://clarus.github.io/coq-of-js/**

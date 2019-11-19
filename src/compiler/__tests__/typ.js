@@ -1,6 +1,15 @@
 // @flow
 import {compileAndPrint} from "../index.js";
 
+describe("qualified type annotations", () => {
+  it("handles qualified type annotations", () => {
+    expect(compileAndPrint(`const a: Foo.t = 12;`)).toMatchInlineSnapshot(`
+      "Definition a : Foo.t :=
+        12."
+    `);
+  });
+});
+
 describe("unhandled types", () => {
   it("shows an error message on unhandled types", () => {
     expect(compileAndPrint(`const a: number | string = 12;`))
