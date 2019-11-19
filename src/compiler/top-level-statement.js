@@ -26,13 +26,39 @@ function* extractIdentifierOfLVal(
   lval: BabelAst.LVal,
 ): Monad.t<BabelAst.Identifier> {
   switch (lval.type) {
-    case "Identifier":
-      return lval;
-    default:
+    case "ArrayPattern":
       return yield* Monad.raise<BabelAst.Identifier>(
         lval,
-        "Expected simple identifier",
+        "Array destructuring at top-level is not allowed due to limitations in Coq",
       );
+    /* istanbul ignore next */
+    case "AssignmentPattern":
+      return yield* Monad.raise<BabelAst.Identifier>(
+        lval,
+        "Unexpected assignement pattern",
+      );
+    case "Identifier":
+      return lval;
+    /* istanbul ignore next */
+    case "MemberExpression":
+      return yield* Monad.raise<BabelAst.Identifier>(
+        lval,
+        "Unexpected member expression",
+      );
+    case "ObjectPattern":
+      return yield* Monad.raise<BabelAst.Identifier>(
+        lval,
+        "Object destructuring at top-level is not allowed due to limitations in Coq",
+      );
+    /* istanbul ignore next */
+    case "RestElement":
+      return yield* Monad.raise<BabelAst.Identifier>(
+        lval,
+        "Rest element unexpected outside a pattern",
+      );
+    /* istanbul ignore next */
+    default:
+      return lval;
   }
 }
 

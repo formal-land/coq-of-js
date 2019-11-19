@@ -78,6 +78,12 @@ export type t =
       record: string,
     }
   | {
+      type: "RecordProjection",
+      field: string,
+      object: t,
+      record: string,
+    }
+  | {
       type: "SumInstance",
       constr: string,
       // eslint-disable-next-line no-use-before-define
@@ -124,17 +130,7 @@ export const tt: t = {
 function* getObjectPropertyName(
   property: BabelAst.ObjectProperty,
 ): Monad.t<string> {
-  switch (property.key.type) {
-    case "Identifier":
-      return Identifier.compile(property.key);
-    case "StringLiteral":
-      return property.key.value;
-    default:
-      return yield* Monad.raise<string>(
-        property,
-        "Expected a plain string as identifier",
-      );
-  }
+  return yield* Typ.getObjectKeyName(property.key);
 }
 
 function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
@@ -397,6 +393,29 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
         operator: expression.operator,
         right: yield* compile(expression.right),
       };
+    case "MemberExpression": {
+      switch (expression.object.type) {
+        case "TypeCastExpression": {
+          const {expression: object, typeAnnotation} = expression.object;
+          const record = yield* Typ.compileIdentifier(
+            typeAnnotation.typeAnnotation,
+          );
+          const field = yield* Typ.getObjectKeyName(expression.property);
+
+          return {
+            type: "RecordProjection",
+            field,
+            object: yield* compile(object),
+            record,
+          };
+        }
+        default:
+          return yield* Monad.raise<t>(
+            expression.object,
+            "Expected a type annotation on this object to access a member",
+          );
+      }
+    }
     case "NullLiteral":
       return tt;
     case "NumericLiteral":
@@ -585,7 +604,7 @@ export function print(needParens: boolean, expression: t): Doc.t {
             Doc.concat([
               Doc.line,
               Doc.join(
-                Doc.concat([",", Doc.line]),
+                Doc.concat([";", Doc.line]),
                 expression.elements.map(element => print(false, element)),
               ),
             ]),
@@ -732,6 +751,26 @@ export function print(needParens: boolean, expression: t): Doc.t {
           name,
           value: print(false, value),
         })),
+      );
+    case "RecordProjection":
+      return Doc.group(
+        Doc.concat([
+          print(true, expression.object),
+          Doc.softline,
+          ".(",
+          Doc.indent(
+            Doc.group(
+              Doc.concat([
+                Doc.softline,
+                expression.record,
+                ".",
+                expression.field,
+              ]),
+            ),
+          ),
+          Doc.softline,
+          ")",
+        ]),
       );
     case "SumInstance": {
       const name = `${expression.sum}.${expression.constr}`;

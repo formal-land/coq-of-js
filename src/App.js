@@ -75,7 +75,7 @@ export default class App extends PureComponent<Props, State> {
   }
 
   getCoqString(coqAst: Program.t): string {
-    return doc.printer.printDocToString(Program.print(coqAst), {
+    return doc.printer.printDocToString(Program.print(coqAst, true), {
       printWidth: 60,
       tabWidth: 2,
     }).formatted;

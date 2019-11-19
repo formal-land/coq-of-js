@@ -9,6 +9,17 @@ export type t = {
   name: string,
 };
 
+export function* getObjectKeyName(key: any): Monad.t<string> {
+  switch (key.type) {
+    case "Identifier":
+      return Identifier.compile(key);
+    case "StringLiteral":
+      return key.value;
+    default:
+      return yield* Monad.raise<string>(key, "Computed key name not handled");
+  }
+}
+
 function compileIdentifierOrQualifiedTypeIdentifier(
   id: BabelAst.Identifier | BabelAst.QualifiedTypeIdentifier,
 ): string {

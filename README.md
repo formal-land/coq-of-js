@@ -1,6 +1,9 @@
 # 🌍 🐓 coq-of-js
 > Import JavaScript programs to Coq. Prove all the things! 🐓
 
+[![travis status](https://img.shields.io/travis/clarus/coq-of-js/master.svg?label=travis-ci&style=flat-square)](https://travis-ci.org/clarus/coq-of-js)
+[![codecov status](https://img.shields.io/codecov/c/github/clarus/coq-of-js.svg?style=flat-square)](https://codecov.io/gh/clarus/coq-of-js)
+
 **Online demo: https://clarus.github.io/coq-of-js/**
 
 The aim of this project is to import JavaScript programs to the [Coq](https://coq.inria.fr/) language, to do [formal verification](https://en.wikipedia.org/wiki/Formal_verification) on JavaScript code.

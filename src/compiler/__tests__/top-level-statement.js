@@ -298,12 +298,21 @@ describe("variable definitions", () => {
     `);
   });
 
-  it("does not handle destructuring of constants", () => {
+  it("does not handle destructuring of arrays", () => {
     expect(compileAndPrint(`const [a, b] = [1, 2];`)).toMatchInlineSnapshot(`
       "> 1 | const [a, b] = [1, 2];
           |      ^^^^^^
 
-      Expected simple identifier"
+      Array destructuring at top-level is not allowed due to limitations in Coq"
+    `);
+  });
+
+  it("does not handle destructuring of objects", () => {
+    expect(compileAndPrint(`const {a, b} = o;`)).toMatchInlineSnapshot(`
+      "> 1 | const {a, b} = o;
+          |      ^^^^^^
+
+      Object destructuring at top-level is not allowed due to limitations in Coq"
     `);
   });
 

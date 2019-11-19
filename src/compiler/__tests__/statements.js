@@ -154,9 +154,9 @@ describe("destructuring of records by definition of variables", () => {
     expect(compileAndPrint(`function foo() {const {["a" + "b"]: v}: Rec = o;}`))
       .toMatchInlineSnapshot(`
       "> 1 | function foo() {const {[\\"a\\" + \\"b\\"]: v}: Rec = o;}
-          |                       ^^^^^^^^^^^^^^
+          |                        ^^^^^^^^^
 
-      Expected a plain string as identifier"
+      Computed key name not handled"
     `);
   });
 
