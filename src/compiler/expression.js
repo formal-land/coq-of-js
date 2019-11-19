@@ -604,7 +604,7 @@ export function print(needParens: boolean, expression: t): Doc.t {
             Doc.concat([
               Doc.line,
               Doc.join(
-                Doc.concat([",", Doc.line]),
+                Doc.concat([";", Doc.line]),
                 expression.elements.map(element => print(false, element)),
               ),
             ]),

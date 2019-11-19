@@ -15,7 +15,7 @@ const cond = b ? "a" : 'b';
 
 // Functions //
 
-function id<A, B>(x: A): A {
+function id<A>(x: A): A {
   return x;
 }
 
@@ -41,6 +41,8 @@ type Rec = {
 };
 
 const o = ({a: "hi", b: 12, c: false}: Rec);
+
+const hi = (o: Rec).a;
 
 
 // Sum types //
