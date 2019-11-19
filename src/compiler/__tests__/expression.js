@@ -123,6 +123,24 @@ describe("logical expressions", () => {
   });
 });
 
+describe("member accesses", () => {
+  it("handles member accesses from records", () => {
+    expect(compileAndPrint(`const a = (o: Rec).a;`)).toMatchInlineSnapshot(`
+      "Definition a :=
+        o.(Rec.a)."
+    `);
+  });
+
+  it("requires a type annotation to know the record type", () => {
+    expect(compileAndPrint(`const a = o.a;`)).toMatchInlineSnapshot(`
+      "> 1 | const a = o.a;
+          |          ^
+
+      Expected a type annotation on this object to access a member"
+    `);
+  });
+});
+
 describe("nulls", () => {
   it("handles nulls", () => {
     expect(compileAndPrint(`const n = null;`)).toMatchInlineSnapshot(`
@@ -191,9 +209,9 @@ describe("objects as records", () => {
     expect(compileAndPrint(`const o = ({12: "hi"}: Rec);`))
       .toMatchInlineSnapshot(`
       "> 1 | const o = ({12: \\"hi\\"}: Rec);
-          |            ^^^^^^^^
+          |            ^^
 
-      Expected a plain string as identifier"
+      Computed key name not handled"
     `);
   });
 });

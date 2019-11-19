@@ -1,7 +1,6 @@
 // @flow
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
-import * as Identifier from "./identifier.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 import * as Util from "./util.js";
@@ -26,18 +25,10 @@ export type t =
       typ: Typ.t,
     };
 
-export function getObjectTypePropertyName(
+function* getObjectTypePropertyName(
   property: BabelAst.ObjectTypeProperty,
-): string {
-  switch (property.key.type) {
-    case "Identifier":
-      return Identifier.compile(property.key);
-    case "StringLiteral":
-      return property.key.value;
-    /* istanbul ignore next */
-    default:
-      return property.key;
-  }
+): Monad.t<string> {
+  return yield* Typ.getObjectKeyName(property.key);
 }
 
 function* getStringOfStringLiteralTypeAnnotation(
@@ -88,7 +79,7 @@ function* compileSumType(typs: BabelAst.FlowType[]): Monad.t<t> {
                 );
               }
 
-              const name = getObjectTypePropertyName(property);
+              const name = yield* getObjectTypePropertyName(property);
 
               return name === "type"
                 ? [[...nameProperties, property], fieldProperties]
@@ -112,7 +103,7 @@ function* compileSumType(typs: BabelAst.FlowType[]): Monad.t<t> {
                 property: BabelAst.ObjectTypeProperty,
               ) {
                 return {
-                  name: getObjectTypePropertyName(property),
+                  name: yield* getObjectTypePropertyName(property),
                   typ: yield* Typ.compile(property.value),
                 };
               }),
@@ -146,11 +137,16 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
 
   switch (typ.type) {
     case "ObjectTypeAnnotation": {
-      const withATypeField = typ.properties.some(
-        property =>
-          property.type === "ObjectTypeProperty" &&
-          getObjectTypePropertyName(property) === "type",
-      );
+      const withATypeField = yield* Monad.some(typ.properties, function*(
+        property,
+      ) {
+        switch (property.type) {
+          case "ObjectTypeProperty":
+            return (yield* getObjectTypePropertyName(property)) === "type";
+          default:
+            return false;
+        }
+      });
 
       if (withATypeField) {
         return yield* compileSumType([typ]);
@@ -163,7 +159,7 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
           }
 
           return {
-            name: getObjectTypePropertyName(property),
+            name: yield* getObjectTypePropertyName(property),
             typ: yield* Typ.compile(property.value),
           };
         }),

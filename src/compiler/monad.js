@@ -39,6 +39,15 @@ export function reduce<Accumulator, A>(
   }, ret(accumulator));
 }
 
+export function some<A>(
+  array: A[],
+  predicate: (element: A) => t<boolean>,
+): t<boolean> {
+  return reduce(array, false, function*(areSome, element) {
+    return areSome || (yield* predicate(element));
+  });
+}
+
 export function* raise<A>(node: BabelAst.Node, message: string): t<A> {
   return yield {type: "Raise", message, node};
 }
