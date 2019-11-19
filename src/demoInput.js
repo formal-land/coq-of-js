@@ -1,26 +1,6 @@
 // @flow
 
-export default `type Rec = {
-  a: string,
-  b: number,
-  c: boolean
-};
-
-const o = ({a: "hi", b: 12, c: false}: Rec);
-
-type Status =
-  | {
-      type: "Error",
-      message: string,
-    }
-  | {
-      type: "Loading",
-    }
-  | {
-      type: "Nothing",
-    };
-
-const status: Status = ({type: "Error", message: "hi"}: Status);
+export default `// Basic definitions //
 
 const
   b: boolean = false && true,
@@ -31,6 +11,9 @@ const s = "hi";
 const a = [1, (2 : number), 3];
 
 const cond = b ? "a" : 'b';
+
+
+// Functions //
 
 function id<A, B>(x: A): A {
   return x;
@@ -47,4 +30,32 @@ const f = function<A> (x : A, y : A): bool {
 }
 
 const arrow = x => x + 1;
+
+
+// Records //
+
+type Rec = {
+  a: string,
+  b: number,
+  c: boolean
+};
+
+const o = ({a: "hi", b: 12, c: false}: Rec);
+
+
+// Sum types //
+
+type Status =
+  | {
+      type: "Error",
+      message: string,
+    }
+  | {
+      type: "Loading",
+    }
+  | {
+      type: "Nothing",
+    };
+
+const status: Status = ({type: "Error", message: "hi"}: Status);
 `;
