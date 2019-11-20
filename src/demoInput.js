@@ -59,7 +59,7 @@ function getEnumIndex(e: Enum): number {
       return 0;
     case "bb":
       return 1;
-    case "cc":
+    default:
       return 2;
   }
 }

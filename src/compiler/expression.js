@@ -50,10 +50,10 @@ export type t =
     }
   | {
       type: "EnumDestruct",
-      branches: {body: t, name: string}[],
+      branches: {body: t, names: string[]}[],
+      defaultBranch: ?t,
       discriminant: t,
       enum: string,
-      withDefault: boolean,
     }
   | {
       type: "EnumInstance",
@@ -231,25 +231,86 @@ export function* compileStatements(
       switch (statement.discriminant.type) {
         case "TypeCastExpression": {
           const {expression, typeAnnotation} = statement.discriminant;
+          const {accumulatedNames, branches} = yield* Monad.reduce<
+            {
+              accumulatedNames: string[],
+              branches: {body: t, names: string[]}[],
+            },
+            BabelAst.SwitchCase,
+          >(statement.cases, {accumulatedNames: [], branches: []}, function*(
+            {accumulatedNames, branches},
+            branch,
+          ) {
+            if (!branch.test) {
+              return {accumulatedNames: [], branches};
+            }
+
+            const name = yield* getStringOfStringLiteral(branch.test);
+            const currentAccumulatedNames = [...accumulatedNames, name];
+
+            if (branch.consequent.length === 0) {
+              return {accumulatedNames: currentAccumulatedNames, branches};
+            }
+
+            return {
+              accumulatedNames: [],
+              branches: [
+                ...branches,
+                {
+                  body: yield* compileStatements(branch.consequent),
+                  names: currentAccumulatedNames,
+                },
+              ],
+            };
+          });
+          const defaultCase =
+            statement.cases.find(branch => {
+              if (branch.test) {
+                return false;
+              }
+
+              if (branch.consequent.length >= 1) {
+                const consequent = branch.consequent[0];
+
+                switch (consequent.type) {
+                  case "ReturnStatement":
+                    if (consequent.argument) {
+                      switch (consequent.argument.type) {
+                        case "TypeCastExpression":
+                          switch (
+                            consequent.argument.typeAnnotation.typeAnnotation
+                              .type
+                          ) {
+                            case "EmptyTypeAnnotation":
+                              return false;
+                            default:
+                              return true;
+                          }
+                        default:
+                          return true;
+                      }
+                    }
+                    return true;
+                  default:
+                    return true;
+                }
+              }
+
+              return true;
+            }) || null;
 
           return {
             type: "EnumDestruct",
-            branches: yield* Monad.all(
-              statement.cases.map(function*(branch) {
-                return {
-                  body: yield* compileStatements(branch.consequent),
-                  name: branch.test
-                    ? yield* getStringOfStringLiteral(branch.test)
-                    : yield* Monad.raise<string>(
-                        branch,
-                        "Unhandled default case",
-                      ),
-                };
-              }),
-            ),
+            branches: [
+              ...branches,
+              ...(accumulatedNames.length !== 0
+                ? [{body: tt, names: accumulatedNames}]
+                : []),
+            ],
+            defaultBranch:
+              defaultCase && (yield* compileStatements(defaultCase.consequent)),
             discriminant: yield* compile(expression),
             enum: yield* Typ.compileIdentifier(typeAnnotation.typeAnnotation),
-            withDefault: false,
           };
         }
         default:
@@ -687,7 +748,9 @@ export function print(needParens: boolean, expression: t): Doc.t {
     }
     case "Constant":
       return JSON.stringify(expression.value);
-    case "EnumDestruct":
+    case "EnumDestruct": {
+      const {defaultBranch} = expression;
+
       return Doc.group(
         Doc.concat([
           Doc.group(
@@ -700,23 +763,41 @@ export function print(needParens: boolean, expression: t): Doc.t {
             ]),
           ),
           Doc.hardline,
-          ...expression.branches.map(({body, name}) =>
+          ...expression.branches.map(({body, names}) =>
             Doc.group(
               Doc.concat([
-                "|",
-                Doc.line,
-                `${expression.enum}.${name}`,
+                Doc.join(
+                  Doc.line,
+                  names.map(name =>
+                    Doc.group(
+                      Doc.concat(["|", Doc.line, `${expression.enum}.${name}`]),
+                    ),
+                  ),
+                ),
                 Doc.line,
                 "=>",
-                Doc.line,
-                print(false, body),
+                Doc.indent(Doc.concat([Doc.line, print(false, body)])),
                 Doc.hardline,
               ]),
             ),
           ),
+          ...(defaultBranch
+            ? [
+                Doc.group(
+                  Doc.concat([
+                    Doc.group(Doc.concat(["|", Doc.line, "_", Doc.line, "=>"])),
+                    Doc.indent(
+                      Doc.concat([Doc.line, print(false, defaultBranch)]),
+                    ),
+                    Doc.hardline,
+                  ]),
+                ),
+              ]
+            : []),
           "end",
         ]),
       );
+    }
     case "EnumInstance":
       return `${expression.enum}.${expression.instance}`;
     case "FunctionExpression":
