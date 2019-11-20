@@ -67,7 +67,7 @@ function foo() {
     `);
   });
 
-  it("does not handle default cases", () => {
+  it("handles default cases", () => {
     expect(
       compileAndPrint(`
 function foo() {
@@ -78,17 +78,49 @@ function foo() {
 }
 `),
     ).toMatchInlineSnapshot(`
-      "  2 | function foo() {
-        3 |   switch ((s: Status)) {
-      > 4 |     default:
-          |    ^^^^^^^^
-      > 5 |       return true;
-          | ^^^^^^^^^^^^^^^^^^
-        6 |   }
-        7 | }
-        8 | 
+      "Definition foo :=
+        match s with
+        | _ => true
+        end."
+    `);
+  });
 
-      Unhandled default case"
+  it("handles repeated cases", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    case "OK":
+    case "Error":
+      return true;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | Status.OK | Status.Error => true
+        end."
+    `);
+  });
+
+  it("handles trailing cases", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    case "OK":
+      return null;
+    case "Error":
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | Status.OK => tt
+        | Status.Error => tt
+        end."
     `);
   });
 
