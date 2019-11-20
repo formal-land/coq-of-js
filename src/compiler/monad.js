@@ -39,6 +39,14 @@ export function reduce<Accumulator, A>(
   }, ret(accumulator));
 }
 
+export function filterMap<A, B>(array: A[], f: (element: A) => t<?B>): t<B[]> {
+  return reduce(array, [], function*(accumulator: B[], element) {
+    const result = yield* f(element);
+
+    return result ? [...accumulator, result] : accumulator;
+  });
+}
+
 export function some<A>(
   array: A[],
   predicate: (element: A) => t<boolean>,
