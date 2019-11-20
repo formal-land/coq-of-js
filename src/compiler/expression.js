@@ -263,7 +263,41 @@ export function* compileStatements(
               ],
             };
           });
-          const defaultCase = statement.cases.find(({test}) => !test) || null;
+          const defaultCase =
+            statement.cases.find(branch => {
+              if (branch.test) {
+                return false;
+              }
+
+              if (branch.consequent.length >= 1) {
+                const consequent = branch.consequent[0];
+
+                switch (consequent.type) {
+                  case "ReturnStatement":
+                    if (consequent.argument) {
+                      switch (consequent.argument.type) {
+                        case "TypeCastExpression":
+                          switch (
+                            consequent.argument.typeAnnotation.typeAnnotation
+                              .type
+                          ) {
+                            case "EmptyTypeAnnotation":
+                              return false;
+                            default:
+                              return true;
+                          }
+                        default:
+                          return true;
+                      }
+                    }
+                    return true;
+                  default:
+                    return true;
+                }
+              }
+
+              return true;
+            }) || null;
 
           return {
             type: "EnumDestruct",

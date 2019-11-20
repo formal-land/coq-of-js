@@ -124,6 +124,99 @@ function foo() {
     `);
   });
 
+  it("handles empty default", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    case "OK":
+      return 12;
+    default:
+      return (s: empty);
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | Status.OK => 12
+        end."
+    `);
+  });
+
+  it("adds default with non-empty type annotation", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    default:
+      return (23: number);
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | _ => (23 : Z)
+        end."
+    `);
+  });
+
+  it("adds default with empty return", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    default:
+      return;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | _ => tt
+        end."
+    `);
+  });
+
+  it("adds default which does not start with return", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    default:
+      const x = 12;
+      return x;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | _ => let x := 12 in
+          x
+        end."
+    `);
+  });
+
+  it("adds default without returns", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    default:
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | _ => tt
+        end."
+    `);
+  });
+
   it("expects a type annotation on the discriminant", () => {
     expect(
       compileAndPrint(`
