@@ -85,7 +85,7 @@ export type t =
     }
   | {
       type: "SumDestruct",
-      branches: {body: t, fields: ?(LeftValueRecordField[]), name: string}[],
+      branches: {body: t, fields: LeftValueRecordField[], name: string}[],
       defaultBranch: ?t,
       discriminant: t,
       sum: string,
@@ -261,7 +261,7 @@ function isEmptyDefaultBranch(statements: BabelAst.Statement[]): boolean {
 }
 
 type FieldsDestructuringFromHeadStatement = {
-  fields: ?(LeftValueRecordField[]),
+  fields: LeftValueRecordField[],
   trailingStatements: BabelAst.Statement[],
 };
 
@@ -269,7 +269,7 @@ function* getFieldsDestructuringFromHeadStatement(
   statements: BabelAst.Statement[],
   discriminantName: string,
 ): Monad.t<FieldsDestructuringFromHeadStatement> {
-  const noDestructuring = {fields: null, trailingStatements: statements};
+  const noDestructuring = {fields: [], trailingStatements: statements};
 
   if (statements.length === 0) {
     return noDestructuring;
@@ -832,6 +832,10 @@ function printRecordInstance(
 function printLeftValue(lval: LeftValue, withQuote: boolean): Doc.t {
   switch (lval.type) {
     case "Record":
+      if (lval.fields.length === 0) {
+        return "_";
+      }
+
       return Doc.concat([
         ...(withQuote ? ["'"] : []),
         printRecordInstance(
@@ -1097,23 +1101,23 @@ export function print(needParens: boolean, expression: t): Doc.t {
     case "SumInstance": {
       const name = `${expression.sum}.${expression.constr}`;
 
-      if (expression.fields.length === 0) {
-        return name;
-      }
-
       return Doc.paren(
         needParens,
         Doc.group(
           Doc.concat([
             name,
             Doc.line,
-            printRecordInstance(
-              name,
-              expression.fields.map(({name, value}) => ({
-                name,
-                value: print(false, value),
-              })),
-            ),
+            ...(expression.fields.length !== 0
+              ? [
+                  printRecordInstance(
+                    name,
+                    expression.fields.map(({name, value}) => ({
+                      name,
+                      value: print(false, value),
+                    })),
+                  ),
+                ]
+              : ["tt"]),
           ]),
         ),
       );

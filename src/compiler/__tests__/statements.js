@@ -313,7 +313,7 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "Definition foo result :=
         match result with
-        | Result.OK => tt
+        | Result.OK _ => tt
         | _ => tt
         end."
     `);
@@ -390,7 +390,7 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "Definition foo result :=
         match result with
-        | Result.OK => let '{| Rec.value := value; |} := otherResult in
+        | Result.OK _ => let '{| Rec.value := value; |} := otherResult in
           value
         | _ => tt
         end."
@@ -441,7 +441,7 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "Definition foo result :=
         match result with
-        | Result.OK => let '{| Rec.value := value; |} := f x in
+        | Result.OK _ => let '{| Rec.value := value; |} := f x in
           value
         | _ => tt
         end."
@@ -464,7 +464,7 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "Definition foo result :=
         match result with
-        | Result.OK => 12
+        | Result.OK _ => 12
         | _ => tt
         end."
     `);
@@ -483,7 +483,7 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "Definition foo result :=
         match result with
-        | Result.OK => 12
+        | Result.OK _ => 12
         end."
     `);
   });
