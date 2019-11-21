@@ -155,6 +155,27 @@ function foo() {
     `);
   });
 
+  it("handles empty default in a block", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    case "OK":
+      return 12;
+    default: {
+      return (s: empty);
+    }
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | Status.OK => 12
+        end."
+    `);
+  });
+
   it("adds default with non-empty type annotation", () => {
     expect(
       compileAndPrint(`
@@ -249,7 +270,7 @@ function foo() {
         5 |       return true;
         6 |     case \\"Error\\":
 
-      Missing type annotation"
+      Missing type annotation to destructure an enum"
     `);
   });
 });
@@ -399,7 +420,7 @@ function foo(result) {
         7 |     }
         8 |     default:
 
-      Expected an object pattern"
+      Expected an object pattern to destructure a sum type"
     `);
   });
 
@@ -490,7 +511,7 @@ function foo(result) {
         5 |       const {value} = result;
         6 |       return value;
 
-      Expected an access on the \`type\` field"
+      Expected an access on the \`type\` field to destructure a sum type"
     `);
   });
 
@@ -517,7 +538,7 @@ function foo(result) {
         5 |       const {value} = result;
         6 |       return value;
 
-      Expected a switch on an identifier"
+      Expected a switch on an identifier to destructure a sum type"
     `);
   });
 
@@ -544,7 +565,7 @@ function foo(result) {
         5 |       const {value} = result;
         6 |       return value;
 
-      Expected a type annotation on this expression"
+      Expected a type annotation on this expression to destructure a sum type"
     `);
   });
 });

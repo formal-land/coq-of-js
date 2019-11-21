@@ -231,15 +231,17 @@ function* getStringOfStringLiteral(
   }
 }
 
-function isEmptyDefaultBranch(switchCase: BabelAst.SwitchCase): boolean {
-  if (switchCase.consequent.length >= 1) {
-    const consequent = switchCase.consequent[0];
-    switch (consequent.type) {
+function isEmptyDefaultBranch(statements: BabelAst.Statement[]): boolean {
+  if (statements.length >= 1) {
+    const statement = statements[0];
+    switch (statement.type) {
+      case "BlockStatement":
+        return isEmptyDefaultBranch(statement.body);
       case "ReturnStatement":
-        if (consequent.argument) {
-          switch (consequent.argument.type) {
+        if (statement.argument) {
+          switch (statement.argument.type) {
             case "TypeCastExpression":
-              switch (consequent.argument.typeAnnotation.typeAnnotation.type) {
+              switch (statement.argument.typeAnnotation.typeAnnotation.type) {
                 case "EmptyTypeAnnotation":
                   return true;
                 default:
@@ -311,7 +313,7 @@ function* getFieldsDestructuringFromHeadStatement(
                 default:
                   return yield* Monad.raise<FieldsDestructuringFromHeadStatement>(
                     declaration.id,
-                    "Expected an object pattern",
+                    "Expected an object pattern to destructure a sum type",
                   );
               }
             }
@@ -357,7 +359,7 @@ export function* compileStatements(
           if (field !== "type") {
             return yield* Monad.raise<t>(
               discriminant.property,
-              "Expected an access on the `type` field",
+              "Expected an access on the `type` field to destructure a sum type",
             );
           }
 
@@ -395,7 +397,9 @@ export function* compileStatements(
                   );
                   const defaultCase =
                     statement.cases.find(
-                      branch => !branch.test && !isEmptyDefaultBranch(branch),
+                      branch =>
+                        !branch.test &&
+                        !isEmptyDefaultBranch(branch.consequent),
                     ) || null;
 
                   return {
@@ -411,14 +415,14 @@ export function* compileStatements(
                 default:
                   return yield* Monad.raise<t>(
                     expression,
-                    "Expected a switch on an identifier",
+                    "Expected a switch on an identifier to destructure a sum type",
                   );
               }
             }
             default:
               return yield* Monad.raise<t>(
                 discriminant.object,
-                "Expected a type annotation on this expression",
+                "Expected a type annotation on this expression to destructure a sum type",
               );
           }
         }
@@ -459,7 +463,8 @@ export function* compileStatements(
           });
           const defaultCase =
             statement.cases.find(
-              branch => !branch.test && !isEmptyDefaultBranch(branch),
+              branch =>
+                !branch.test && !isEmptyDefaultBranch(branch.consequent),
             ) || null;
 
           return {
@@ -481,7 +486,7 @@ export function* compileStatements(
         default:
           return yield* Monad.raise<t>(
             statement.discriminant,
-            "Missing type annotation",
+            "Missing type annotation to destructure an enum",
           );
       }
     case "VariableDeclaration": {
