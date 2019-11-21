@@ -96,6 +96,29 @@ describe("nullable types", () => {
   });
 });
 
+describe("object types", () => {
+  it("does not handle object types outside of definitions", () => {
+    expect(compileAndPrint(`const o: {a: string} = f(x);`))
+      .toMatchInlineSnapshot(`
+      "> 1 | const o: {a: string} = f(x);
+          |         ^^^^^^^^^^^
+
+      This kind of object type is not handled outside of type definitions"
+    `);
+  });
+});
+
+describe("string literal types", () => {
+  it("does not handle string literal types outside of definitions", () => {
+    expect(compileAndPrint(`const o: "hi" = "hi";`)).toMatchInlineSnapshot(`
+      "> 1 | const o: \\"hi\\" = \\"hi\\";
+          |         ^^^^
+
+      String literal types are not handled outside of type definitions"
+    `);
+  });
+});
+
 describe("this type", () => {
   it("does not handle the this type", () => {
     expect(compileAndPrint(`type t = this;`)).toMatchInlineSnapshot(`
@@ -148,54 +171,7 @@ describe("unhandled types", () => {
       "> 1 | const a: number | string = 12;
           |         ^^^^^^^^^^^^^^^
 
-      Unhandled syntax:
-      {
-        \\"type\\": \\"UnionTypeAnnotation\\",
-        \\"start\\": 9,
-        \\"end\\": 24,
-        \\"loc\\": {
-          \\"start\\": {
-            \\"line\\": 1,
-            \\"column\\": 9
-          },
-          \\"end\\": {
-            \\"line\\": 1,
-            \\"column\\": 24
-          }
-        },
-        \\"types\\": [
-          {
-            \\"type\\": \\"NumberTypeAnnotation\\",
-            \\"start\\": 9,
-            \\"end\\": 15,
-            \\"loc\\": {
-              \\"start\\": {
-                \\"line\\": 1,
-                \\"column\\": 9
-              },
-              \\"end\\": {
-                \\"line\\": 1,
-                \\"column\\": 15
-              }
-            }
-          },
-          {
-            \\"type\\": \\"StringTypeAnnotation\\",
-            \\"start\\": 18,
-            \\"end\\": 24,
-            \\"loc\\": {
-              \\"start\\": {
-                \\"line\\": 1,
-                \\"column\\": 18
-              },
-              \\"end\\": {
-                \\"line\\": 1,
-                \\"column\\": 24
-              }
-            }
-          }
-        ]
-      }"
+      Union types are not handled outside of type definitions"
     `);
   });
 });
