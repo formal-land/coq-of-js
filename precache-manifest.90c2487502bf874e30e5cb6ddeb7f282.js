@@ -1,10 +1,10 @@
 self.__precacheManifest = (self.__precacheManifest || []).concat([
   {
-    "revision": "a5c5f9f811f60224496ce5e9910e7239",
+    "revision": "9c4b1b61baeec33a00847b03684c26de",
     "url": "/coq-of-js/index.html"
   },
   {
-    "revision": "0b5a93c48cea460eff05",
+    "revision": "6c49f4ccd170c9f37658",
     "url": "/coq-of-js/static/css/main.2b05f422.chunk.css"
   },
   {
@@ -12,8 +12,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/coq-of-js/static/js/2.145b760c.chunk.js"
   },
   {
-    "revision": "0b5a93c48cea460eff05",
-    "url": "/coq-of-js/static/js/main.d7cfea56.chunk.js"
+    "revision": "6c49f4ccd170c9f37658",
+    "url": "/coq-of-js/static/js/main.c92097f1.chunk.js"
   },
   {
     "revision": "d05f6c9e125cd4f38bcb",
