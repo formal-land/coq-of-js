@@ -12,10 +12,10 @@ The aim of this project is to import JavaScript programs to the [Coq](https://co
 
 ## Run
 For now: a web-interface to do development, with four columns:
-* the JavaScript source;
+* the JavaScript input;
+* the Coq output;
 * the JavaScript AST;
-* the Coq AST;
-* the Coq source.
+* the Coq AST.
 
 From the command line:
 ```
@@ -27,6 +27,9 @@ or with [Yarn](https://yarnpkg.com/lang/en/):
 yarn install
 yarn start
 ```
+
+## Examples
+See the [online demo](https://clarus.github.io/coq-of-js/).
 
 ## Todo
 We want to validate the basis:
