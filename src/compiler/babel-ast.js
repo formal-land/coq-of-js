@@ -1313,17 +1313,17 @@ export type Flow =
 export type FlowType =
   | AnyTypeAnnotation
   | ArrayTypeAnnotation
-  | BooleanTypeAnnotation
   | BooleanLiteralTypeAnnotation
-  | NullLiteralTypeAnnotation
+  | BooleanTypeAnnotation
+  | EmptyTypeAnnotation
   | ExistsTypeAnnotation
   | FunctionTypeAnnotation
   | GenericTypeAnnotation
   | InterfaceTypeAnnotation
   | IntersectionTypeAnnotation
   | MixedTypeAnnotation
-  | EmptyTypeAnnotation
   | NullableTypeAnnotation
+  | NullLiteralTypeAnnotation
   | NumberLiteralTypeAnnotation
   | NumberTypeAnnotation
   | ObjectTypeAnnotation

@@ -180,6 +180,7 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
           typ: {
             type: "Variable",
             name: "Empty_set",
+            params: [],
           },
         };
       }
@@ -196,6 +197,7 @@ export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
           );
       }
     }
+    /* istanbul ignore next */
     default:
       return yield* Monad.raiseUnhandled<t>(typ);
   }
@@ -228,7 +230,7 @@ function printRecord(
             Doc.line,
             ":",
             Doc.line,
-            Typ.print(typ),
+            Typ.print(false, typ),
             Doc.softline,
             ";",
           ]),
@@ -340,7 +342,9 @@ export function print(name: string, typDefinition: t): Doc.t {
               ":=",
             ]),
           ),
-          Doc.indent(Doc.concat([Doc.line, Typ.print(typDefinition.typ), "."])),
+          Doc.indent(
+            Doc.concat([Doc.line, Typ.print(false, typDefinition.typ), "."]),
+          ),
         ]),
       );
     /* istanbul ignore next */
