@@ -126,78 +126,88 @@ function* compileSumType(typs: BabelAst.FlowType[]): Monad.t<t> {
 }
 
 export function* compile(typ: BabelAst.FlowType): Monad.t<t> {
-  const plainTyp = yield* Typ.compileIfHandled(typ);
+  const compiledTyp = yield* Typ.compileIfPlainTyp(typ);
 
-  if (plainTyp) {
-    return {
-      type: "Synonym",
-      typ: plainTyp,
-    };
-  }
+  switch (compiledTyp.type) {
+    case "PlainTyp":
+      return {
+        type: "Synonym",
+        typ: compiledTyp.typ,
+      };
+    case "Rest":
+      switch (compiledTyp.typ.type) {
+        case "ObjectTypeAnnotation": {
+          const objectTyp = compiledTyp.typ;
+          const withATypeField = yield* Monad.some(
+            objectTyp.properties,
+            function*(property) {
+              switch (property.type) {
+                case "ObjectTypeProperty":
+                  return (
+                    (yield* getObjectTypePropertyName(property)) === "type"
+                  );
+                default:
+                  return false;
+              }
+            },
+          );
 
-  switch (typ.type) {
-    case "ObjectTypeAnnotation": {
-      const withATypeField = yield* Monad.some(typ.properties, function*(
-        property,
-      ) {
-        switch (property.type) {
-          case "ObjectTypeProperty":
-            return (yield* getObjectTypePropertyName(property)) === "type";
-          default:
-            return false;
-        }
-      });
-
-      if (withATypeField) {
-        return yield* compileSumType([typ]);
-      }
-
-      const fields = yield* Monad.all(
-        typ.properties.map(function*(property) {
-          if (property.type !== "ObjectTypeProperty") {
-            return yield* Monad.raise(property, "Expected named property");
+          if (withATypeField) {
+            return yield* compileSumType([objectTyp]);
           }
 
-          return {
-            name: yield* getObjectTypePropertyName(property),
-            typ: yield* Typ.compile(property.value),
-          };
-        }),
-      );
+          const fields = yield* Monad.all(
+            objectTyp.properties.map(function*(property) {
+              if (property.type !== "ObjectTypeProperty") {
+                return yield* Monad.raise(property, "Expected named property");
+              }
 
-      return {
-        type: "Record",
-        fields,
-      };
-    }
-    case "StringLiteralTypeAnnotation":
-      return yield* compileStringEnum([typ]);
-    case "UnionTypeAnnotation": {
-      /* istanbul ignore next */
-      if (typ.types.length === 0) {
-        return {
-          type: "Synonym",
-          typ: {
-            type: "Variable",
-            name: "Empty_set",
-          },
-        };
-      }
-
-      switch (typ.types[0].type) {
-        case "ObjectTypeAnnotation":
-          return yield* compileSumType(typ.types);
-        case "StringLiteralTypeAnnotation":
-          return yield* compileStringEnum(typ.types);
-        default:
-          return yield* Monad.raise<t>(
-            typ,
-            "Only handle unions of strings or objects with a `type` field",
+              return {
+                name: yield* getObjectTypePropertyName(property),
+                typ: yield* Typ.compile(property.value),
+              };
+            }),
           );
+
+          return {
+            type: "Record",
+            fields,
+          };
+        }
+        case "StringLiteralTypeAnnotation":
+          return yield* compileStringEnum([compiledTyp.typ]);
+        case "UnionTypeAnnotation": {
+          /* istanbul ignore next */
+          if (compiledTyp.typ.types.length === 0) {
+            return {
+              type: "Synonym",
+              typ: {
+                type: "Variable",
+                name: "Empty_set",
+                params: [],
+              },
+            };
+          }
+
+          switch (compiledTyp.typ.types[0].type) {
+            case "ObjectTypeAnnotation":
+              return yield* compileSumType(compiledTyp.typ.types);
+            case "StringLiteralTypeAnnotation":
+              return yield* compileStringEnum(compiledTyp.typ.types);
+            default:
+              return yield* Monad.raise<t>(
+                compiledTyp.typ,
+                "Only handle unions of strings or objects with a `type` field",
+              );
+          }
+        }
+        /* istanbul ignore next */
+        default:
+          return compiledTyp.typ;
       }
-    }
+    /* istanbul ignore next */
     default:
-      return yield* Monad.raiseUnhandled<t>(typ);
+      return compiledTyp;
   }
 }
 
@@ -228,7 +238,7 @@ function printRecord(
             Doc.line,
             ":",
             Doc.line,
-            Typ.print(typ),
+            Typ.print(false, typ),
             Doc.softline,
             ";",
           ]),
@@ -340,7 +350,9 @@ export function print(name: string, typDefinition: t): Doc.t {
               ":=",
             ]),
           ),
-          Doc.indent(Doc.concat([Doc.line, Typ.print(typDefinition.typ), "."])),
+          Doc.indent(
+            Doc.concat([Doc.line, Typ.print(false, typDefinition.typ), "."]),
+          ),
         ]),
       );
     /* istanbul ignore next */

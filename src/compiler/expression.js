@@ -791,7 +791,7 @@ export function printFunArguments(funArguments: FunArgument[]): Doc.t {
                 Doc.line,
                 ":",
                 Doc.line,
-                Typ.print(typ),
+                Typ.print(false, typ),
                 ")",
               ]),
             )
@@ -1131,7 +1131,7 @@ export function print(needParens: boolean, expression: t): Doc.t {
           Doc.line,
           ":",
           Doc.line,
-          Typ.print(expression.typeAnnotation),
+          Typ.print(false, expression.typeAnnotation),
           Doc.softline,
           ")",
         ]),
