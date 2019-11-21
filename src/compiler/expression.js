@@ -53,12 +53,12 @@ export type t =
       branches: {body: t, names: string[]}[],
       defaultBranch: ?t,
       discriminant: t,
-      enum: string,
+      typName: string,
     }
   | {
       type: "EnumInstance",
-      enum: string,
       instance: string,
+      typName: string,
     }
   | {
       type: "FunctionExpression",
@@ -82,6 +82,13 @@ export type t =
       field: string,
       object: t,
       record: string,
+    }
+  | {
+      type: "SumDestruct",
+      branches: {body: t, fields: LeftValueRecordField[], name: string}[],
+      defaultBranch: ?t,
+      discriminant: t,
+      sum: string,
     }
   | {
       type: "SumInstance",
@@ -133,6 +140,41 @@ function* getObjectPropertyName(
   return yield* Typ.getObjectKeyName(property.key);
 }
 
+function* getLeftValueRecordFields(
+  pattern: BabelAst.ObjectPattern,
+): Monad.t<LeftValueRecordField[]> {
+  return yield* Monad.all(
+    pattern.properties.map(function*(property) {
+      switch (property.type) {
+        case "ObjectProperty":
+          switch (property.value.type) {
+            case "Identifier": {
+              const {value} = property;
+
+              return {
+                name: yield* getObjectPropertyName(property),
+                variable: Identifier.compile(value),
+              };
+            }
+            default:
+              return yield* Monad.raise<LeftValueRecordField>(
+                property.value,
+                "Expected an identifier",
+              );
+          }
+        case "RestElement":
+          return yield* Monad.raise<LeftValueRecordField>(
+            property,
+            "Unhandled rest element for record destructuring",
+          );
+        /* istanbul ignore next */
+        default:
+          return property;
+      }
+    }),
+  );
+}
+
 function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
   switch (lval.type) {
     case "ArrayPattern":
@@ -156,35 +198,9 @@ function* compileLVal(lval: BabelAst.LVal): Monad.t<LeftValue> {
         ? yield* Typ.compileIdentifier(lval.typeAnnotation.typeAnnotation)
         : yield* Monad.raise<string>(
             lval,
-            "Expected a type annotation for the destructuring",
+            "Expected a type annotation for record destructuring",
           );
-      const fields = yield* Monad.all(
-        lval.properties.map(function*(property) {
-          switch (property.type) {
-            case "ObjectProperty":
-              switch (property.value.type) {
-                case "Identifier": {
-                  const {value} = property;
-
-                  return {
-                    name: yield* getObjectPropertyName(property),
-                    variable: Identifier.compile(value),
-                  };
-                }
-                default:
-                  return yield* Monad.raise<LeftValueRecordField>(
-                    property.value,
-                    "Expected an identifier",
-                  );
-              }
-            default:
-              return yield* Monad.raise<LeftValueRecordField>(
-                property,
-                "Unhandled pattern field",
-              );
-          }
-        }),
-      );
+      const fields = yield* getLeftValueRecordFields(lval);
 
       return {
         type: "Record",
@@ -215,6 +231,107 @@ function* getStringOfStringLiteral(
   }
 }
 
+function isEmptyDefaultBranch(statements: BabelAst.Statement[]): boolean {
+  if (statements.length >= 1) {
+    const statement = statements[0];
+    switch (statement.type) {
+      case "BlockStatement":
+        return isEmptyDefaultBranch(statement.body);
+      case "ReturnStatement":
+        if (statement.argument) {
+          switch (statement.argument.type) {
+            case "TypeCastExpression":
+              switch (statement.argument.typeAnnotation.typeAnnotation.type) {
+                case "EmptyTypeAnnotation":
+                  return true;
+                default:
+                  return false;
+              }
+            default:
+              return false;
+          }
+        }
+        return false;
+      default:
+        return false;
+    }
+  }
+
+  return false;
+}
+
+type FieldsDestructuringFromHeadStatement = {
+  fields: LeftValueRecordField[],
+  trailingStatements: BabelAst.Statement[],
+};
+
+function* getFieldsDestructuringFromHeadStatement(
+  statements: BabelAst.Statement[],
+  discriminantName: string,
+): Monad.t<FieldsDestructuringFromHeadStatement> {
+  const noDestructuring = {fields: [], trailingStatements: statements};
+
+  if (statements.length === 0) {
+    return noDestructuring;
+  }
+
+  const headStatement = statements[0];
+
+  switch (headStatement.type) {
+    case "BlockStatement":
+      return yield* getFieldsDestructuringFromHeadStatement(
+        [...headStatement.body, ...statements.slice(1)],
+        discriminantName,
+      );
+    case "VariableDeclaration": {
+      if (headStatement.declarations.length !== 1) {
+        return yield* Monad.raise<FieldsDestructuringFromHeadStatement>(
+          headStatement,
+          "Expected a single definition of variable",
+        );
+      }
+
+      const declaration = headStatement.declarations[0];
+
+      if (declaration.init) {
+        switch (declaration.init.type) {
+          case "Identifier": {
+            const {name} = declaration.init;
+
+            if (name === discriminantName) {
+              switch (declaration.id.type) {
+                case "ObjectPattern": {
+                  const fields = yield* getLeftValueRecordFields(
+                    declaration.id,
+                  );
+
+                  return {
+                    fields,
+                    trailingStatements: statements.slice(1),
+                  };
+                }
+                default:
+                  return yield* Monad.raise<FieldsDestructuringFromHeadStatement>(
+                    declaration.id,
+                    "Expected an object pattern to destructure a sum type",
+                  );
+              }
+            }
+
+            return noDestructuring;
+          }
+          default:
+            return noDestructuring;
+        }
+      }
+
+      return noDestructuring;
+    }
+    default:
+      return noDestructuring;
+  }
+}
+
 export function* compileStatements(
   statements: BabelAst.Statement[],
 ): Monad.t<t> {
@@ -225,10 +342,91 @@ export function* compileStatements(
   const statement = statements[0];
 
   switch (statement.type) {
+    case "BlockStatement":
+      return yield* compileStatements([
+        ...statement.body,
+        ...statements.slice(1),
+      ]);
     case "ReturnStatement":
       return statement.argument ? yield* compile(statement.argument) : tt;
     case "SwitchStatement":
       switch (statement.discriminant.type) {
+        // Destructuring of sum type.
+        case "MemberExpression": {
+          const {discriminant} = statement;
+          const field = yield* Typ.getObjectKeyName(discriminant.property);
+
+          if (field !== "type") {
+            return yield* Monad.raise<t>(
+              discriminant.property,
+              "Expected an access on the `type` field to destructure a sum type",
+            );
+          }
+
+          switch (discriminant.object.type) {
+            case "TypeCastExpression": {
+              const {expression, typeAnnotation} = discriminant.object;
+              const sum = yield* Typ.compileIdentifier(
+                typeAnnotation.typeAnnotation,
+              );
+
+              switch (expression.type) {
+                case "Identifier": {
+                  const discriminantName = expression.name;
+                  const branches = yield* Monad.filterMap(
+                    statement.cases,
+                    function*({consequent, test}) {
+                      if (!test) {
+                        return null;
+                      }
+
+                      const {
+                        fields,
+                        trailingStatements,
+                      } = yield* getFieldsDestructuringFromHeadStatement(
+                        consequent,
+                        discriminantName,
+                      );
+
+                      return {
+                        body: yield* compileStatements(trailingStatements),
+                        fields,
+                        name: yield* getStringOfStringLiteral(test),
+                      };
+                    },
+                  );
+                  const defaultCase =
+                    statement.cases.find(
+                      branch =>
+                        !branch.test &&
+                        !isEmptyDefaultBranch(branch.consequent),
+                    ) || null;
+
+                  return {
+                    type: "SumDestruct",
+                    branches,
+                    defaultBranch:
+                      defaultCase &&
+                      (yield* compileStatements(defaultCase.consequent)),
+                    discriminant: yield* compile(expression),
+                    sum,
+                  };
+                }
+                default:
+                  return yield* Monad.raise<t>(
+                    expression,
+                    "Expected a switch on an identifier to destructure a sum type",
+                  );
+              }
+            }
+            default:
+              return yield* Monad.raise<t>(
+                discriminant.object,
+                "Expected a type annotation on this expression to destructure a sum type",
+              );
+          }
+        }
+        // Destructuring of enum.
         case "TypeCastExpression": {
           const {expression, typeAnnotation} = statement.discriminant;
           const {accumulatedNames, branches} = yield* Monad.reduce<
@@ -264,40 +462,10 @@ export function* compileStatements(
             };
           });
           const defaultCase =
-            statement.cases.find(branch => {
-              if (branch.test) {
-                return false;
-              }
-
-              if (branch.consequent.length >= 1) {
-                const consequent = branch.consequent[0];
-
-                switch (consequent.type) {
-                  case "ReturnStatement":
-                    if (consequent.argument) {
-                      switch (consequent.argument.type) {
-                        case "TypeCastExpression":
-                          switch (
-                            consequent.argument.typeAnnotation.typeAnnotation
-                              .type
-                          ) {
-                            case "EmptyTypeAnnotation":
-                              return false;
-                            default:
-                              return true;
-                          }
-                        default:
-                          return true;
-                      }
-                    }
-                    return true;
-                  default:
-                    return true;
-                }
-              }
-
-              return true;
-            }) || null;
+            statement.cases.find(
+              branch =>
+                !branch.test && !isEmptyDefaultBranch(branch.consequent),
+            ) || null;
 
           return {
             type: "EnumDestruct",
@@ -310,13 +478,15 @@ export function* compileStatements(
             defaultBranch:
               defaultCase && (yield* compileStatements(defaultCase.consequent)),
             discriminant: yield* compile(expression),
-            enum: yield* Typ.compileIdentifier(typeAnnotation.typeAnnotation),
+            typName: yield* Typ.compileIdentifier(
+              typeAnnotation.typeAnnotation,
+            ),
           };
         }
         default:
           return yield* Monad.raise<t>(
             statement.discriminant,
-            "Missing type annotation",
+            "Missing type annotation to destructure an enum",
           );
       }
     case "VariableDeclaration": {
@@ -335,7 +505,10 @@ export function* compileStatements(
         lval: yield* compileLVal(declaration.id),
         value: declaration.init
           ? yield* compile(declaration.init)
-          : yield* Monad.raise<t>(declaration, "Expected definition"),
+          : yield* Monad.raise<t>(
+              declaration,
+              "Expected a definition with a value",
+            ),
       };
     }
     default:
@@ -578,10 +751,10 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
 
           return {
             type: "EnumInstance",
-            enum: yield* Typ.compileIdentifier(
+            instance: value,
+            typName: yield* Typ.compileIdentifier(
               expression.typeAnnotation.typeAnnotation,
             ),
-            instance: value,
           };
         }
         default:
@@ -656,11 +829,15 @@ function printRecordInstance(
   );
 }
 
-function printLeftValue(lval: LeftValue): Doc.t {
+function printLeftValue(lval: LeftValue, withQuote: boolean): Doc.t {
   switch (lval.type) {
     case "Record":
+      if (lval.fields.length === 0) {
+        return "_";
+      }
+
       return Doc.concat([
-        "'",
+        ...(withQuote ? ["'"] : []),
         printRecordInstance(
           lval.record,
           lval.fields.map(({name, variable}) => ({name, value: variable})),
@@ -672,6 +849,75 @@ function printLeftValue(lval: LeftValue): Doc.t {
     default:
       return lval;
   }
+}
+
+function printMatch(
+  discriminant: Doc.t,
+  branches: {
+    body: Doc.t,
+    patterns: {
+      fields: ?(LeftValueRecordField[]),
+      name: string,
+    }[],
+  }[],
+  defaultBranch: ?Doc.t,
+  typName: string,
+): Doc.t {
+  return Doc.group(
+    Doc.concat([
+      Doc.group(
+        Doc.concat(["match", Doc.line, discriminant, Doc.line, "with"]),
+      ),
+      Doc.hardline,
+      ...branches.map(({body, patterns}) =>
+        Doc.group(
+          Doc.concat([
+            Doc.join(
+              Doc.line,
+              patterns.map(({fields, name}) =>
+                Doc.group(
+                  Doc.concat([
+                    "|",
+                    Doc.line,
+                    `${typName}.${name}`,
+                    ...(fields
+                      ? [
+                          Doc.line,
+                          printLeftValue(
+                            {
+                              type: "Record",
+                              fields,
+                              record: `${typName}.${name}`,
+                            },
+                            false,
+                          ),
+                        ]
+                      : []),
+                  ]),
+                ),
+              ),
+            ),
+            Doc.line,
+            "=>",
+            Doc.indent(Doc.concat([Doc.line, body])),
+            Doc.hardline,
+          ]),
+        ),
+      ),
+      ...(defaultBranch
+        ? [
+            Doc.group(
+              Doc.concat([
+                Doc.group(Doc.concat(["|", Doc.line, "_", Doc.line, "=>"])),
+                Doc.indent(Doc.concat([Doc.line, defaultBranch])),
+                Doc.hardline,
+              ]),
+            ),
+          ]
+        : []),
+      "end",
+    ]),
+  );
 }
 
 export function print(needParens: boolean, expression: t): Doc.t {
@@ -749,57 +995,20 @@ export function print(needParens: boolean, expression: t): Doc.t {
     case "Constant":
       return JSON.stringify(expression.value);
     case "EnumDestruct": {
-      const {defaultBranch} = expression;
+      const {branches, defaultBranch, discriminant, typName} = expression;
 
-      return Doc.group(
-        Doc.concat([
-          Doc.group(
-            Doc.concat([
-              "match",
-              Doc.line,
-              print(false, expression.discriminant),
-              Doc.line,
-              "with",
-            ]),
-          ),
-          Doc.hardline,
-          ...expression.branches.map(({body, names}) =>
-            Doc.group(
-              Doc.concat([
-                Doc.join(
-                  Doc.line,
-                  names.map(name =>
-                    Doc.group(
-                      Doc.concat(["|", Doc.line, `${expression.enum}.${name}`]),
-                    ),
-                  ),
-                ),
-                Doc.line,
-                "=>",
-                Doc.indent(Doc.concat([Doc.line, print(false, body)])),
-                Doc.hardline,
-              ]),
-            ),
-          ),
-          ...(defaultBranch
-            ? [
-                Doc.group(
-                  Doc.concat([
-                    Doc.group(Doc.concat(["|", Doc.line, "_", Doc.line, "=>"])),
-                    Doc.indent(
-                      Doc.concat([Doc.line, print(false, defaultBranch)]),
-                    ),
-                    Doc.hardline,
-                  ]),
-                ),
-              ]
-            : []),
-          "end",
-        ]),
+      return printMatch(
+        print(false, discriminant),
+        branches.map(({body, names}) => ({
+          body: print(false, body),
+          patterns: names.map(name => ({fields: null, name})),
+        })),
+        defaultBranch && print(false, defaultBranch),
+        typName,
       );
     }
     case "EnumInstance":
-      return `${expression.enum}.${expression.instance}`;
+      return `${expression.typName}.${expression.instance}`;
     case "FunctionExpression":
       return Doc.paren(
         needParens,
@@ -836,7 +1045,7 @@ export function print(needParens: boolean, expression: t): Doc.t {
             Doc.concat([
               "let",
               Doc.line,
-              printLeftValue(expression.lval),
+              printLeftValue(expression.lval, true),
               Doc.line,
               ":=",
             ]),
@@ -876,12 +1085,21 @@ export function print(needParens: boolean, expression: t): Doc.t {
           ")",
         ]),
       );
+    case "SumDestruct": {
+      const {branches, defaultBranch, discriminant, sum} = expression;
+
+      return printMatch(
+        print(false, discriminant),
+        branches.map(({body, fields, name}) => ({
+          body: print(false, body),
+          patterns: [{fields, name}],
+        })),
+        defaultBranch && print(false, defaultBranch),
+        sum,
+      );
+    }
     case "SumInstance": {
       const name = `${expression.sum}.${expression.constr}`;
-
-      if (expression.fields.length === 0) {
-        return name;
-      }
 
       return Doc.paren(
         needParens,
@@ -889,13 +1107,17 @@ export function print(needParens: boolean, expression: t): Doc.t {
           Doc.concat([
             name,
             Doc.line,
-            printRecordInstance(
-              name,
-              expression.fields.map(({name, value}) => ({
-                name,
-                value: print(false, value),
-              })),
-            ),
+            ...(expression.fields.length !== 0
+              ? [
+                  printRecordInstance(
+                    name,
+                    expression.fields.map(({name, value}) => ({
+                      name,
+                      value: print(false, value),
+                    })),
+                  ),
+                ]
+              : ["tt"]),
           ]),
         ),
       );

@@ -158,8 +158,8 @@ describe("sum types", () => {
 
         Inductive t :=
         | Error (_ : Error.t)
-        | Loading
-        | Nothing
+        | Loading (_ : unit)
+        | Nothing (_ : unit)
         | Success (_ : Success.t).
       End Status.
       Definition Status := Status.t."

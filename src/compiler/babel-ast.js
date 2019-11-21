@@ -1206,12 +1206,12 @@ export type PatternLike =
   | ArrayPattern
   | ObjectPattern;
 export type LVal =
+  | ArrayPattern
+  | AssignmentPattern
   | Identifier
   | MemberExpression
-  | RestElement
-  | AssignmentPattern
-  | ArrayPattern
-  | ObjectPattern;
+  | ObjectPattern
+  | RestElement;
 export type Literal =
   | StringLiteral
   | NumericLiteral

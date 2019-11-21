@@ -283,7 +283,7 @@ describe("objects as sum types", () => {
     expect(compileAndPrint(`const o = ({type: "Foo"}: Status);`))
       .toMatchInlineSnapshot(`
       "Definition o :=
-        Status.Foo."
+        Status.Foo tt."
     `);
   });
 

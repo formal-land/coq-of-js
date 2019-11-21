@@ -64,7 +64,7 @@ function getEnumIndex(e: Enum): number {
   }
 }
 
-/* Sum types */
+/* Algebraic data types */
 
 type Status =
   | {
@@ -79,4 +79,19 @@ type Status =
     };
 
 const status: Status = ({type: "Error", message: "hi"}: Status);
+
+function getMessage(status: Status): string {
+  switch ((status: Status).type) {
+    case "Error": {
+      const {message} = status;
+      return message;
+    }
+    case "Loading":
+      return "loading...";
+    case "Nothing":
+      return "";
+    default:
+      return (status: empty);
+  }
+}
 `;

@@ -28,6 +28,17 @@ describe("empty statements", () => {
   });
 });
 
+describe("block statements", () => {
+  it("handles block statements", () => {
+    expect(compileAndPrint(`function foo() {{const x = 12; return x}}`))
+      .toMatchInlineSnapshot(`
+      "Definition foo :=
+        let x := 12 in
+        x."
+    `);
+  });
+});
+
 describe("returns", () => {
   it("handles returns", () => {
     expect(compileAndPrint(`function foo() {return 12;}`))
@@ -144,6 +155,27 @@ function foo() {
     `);
   });
 
+  it("handles empty default in a block", () => {
+    expect(
+      compileAndPrint(`
+function foo() {
+  switch ((s: Status)) {
+    case "OK":
+      return 12;
+    default: {
+      return (s: empty);
+    }
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo :=
+        match s with
+        | Status.OK => 12
+        end."
+    `);
+  });
+
   it("adds default with non-empty type annotation", () => {
     expect(
       compileAndPrint(`
@@ -238,7 +270,302 @@ function foo() {
         5 |       return true;
         6 |     case \\"Error\\":
 
-      Missing type annotation"
+      Missing type annotation to destructure an enum"
+    `);
+  });
+});
+
+describe("destructuring of sums", () => {
+  it("handles destructuring of sums", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      const {value} = result;
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo result :=
+        match result with
+        | Result.OK {| Result.OK.value := value; |} => value
+        | _ => tt
+        end."
+    `);
+  });
+
+  it("handles empty cases", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK":
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo result :=
+        match result with
+        | Result.OK _ => tt
+        | _ => tt
+        end."
+    `);
+  });
+
+  it("does not handle multiple variable definitions", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      const {value} = result, x = 12;
+      return value
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "  3 |   switch ((result: Result).type) {
+        4 |     case \\"OK\\": {
+      > 5 |       const {value} = result, x = 12;
+          |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        6 |       return value
+        7 |     }
+        8 |     default:
+
+      Expected a single definition of variable"
+    `);
+  });
+
+  it("does not handle empty variable definition", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      var x;
+      return x;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "  3 |   switch ((result: Result).type) {
+        4 |     case \\"OK\\": {
+      > 5 |       var x;
+          |          ^
+        6 |       return x;
+        7 |     }
+        8 |     default:
+
+      Expected a definition with a value"
+    `);
+  });
+
+  it("does not take into account object destructuring on different variables", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      const {value}: Rec = otherResult;
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo result :=
+        match result with
+        | Result.OK _ => let '{| Rec.value := value; |} := otherResult in
+          value
+        | _ => tt
+        end."
+    `);
+  });
+
+  it("requires the destructuring to be with an object pattern", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      const value = result;
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "  3 |   switch ((result: Result).type) {
+        4 |     case \\"OK\\": {
+      > 5 |       const value = result;
+          |            ^^^^^
+        6 |       return value;
+        7 |     }
+        8 |     default:
+
+      Expected an object pattern to destructure a sum type"
+    `);
+  });
+
+  it("does not take into account object destructuring on expressions wich are not variables", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      const {value}: Rec = f(x);
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo result :=
+        match result with
+        | Result.OK _ => let '{| Rec.value := value; |} := f x in
+          value
+        | _ => tt
+        end."
+    `);
+  });
+
+  it("does not take into account other actions than assignment of variables", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK": {
+      return 12;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo result :=
+        match result with
+        | Result.OK _ => 12
+        | _ => tt
+        end."
+    `);
+  });
+
+  it("does not require a default field", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).type) {
+    case "OK":
+      return 12;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "Definition foo result :=
+        match result with
+        | Result.OK _ => 12
+        end."
+    `);
+  });
+
+  it("requires the switch to be on the `type` field", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((result: Result).kind) {
+    case "OK": {
+      const {value} = result;
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "  1 | 
+        2 | function foo(result) {
+      > 3 |   switch ((result: Result).kind) {
+          |                           ^^^^
+        4 |     case \\"OK\\": {
+        5 |       const {value} = result;
+        6 |       return value;
+
+      Expected an access on the \`type\` field to destructure a sum type"
+    `);
+  });
+
+  it("requires the switch to be on an identifier", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch ((f(x): Result).type) {
+    case "OK": {
+      const {value} = result;
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "  1 | 
+        2 | function foo(result) {
+      > 3 |   switch ((f(x): Result).type) {
+          |           ^^^^
+        4 |     case \\"OK\\": {
+        5 |       const {value} = result;
+        6 |       return value;
+
+      Expected a switch on an identifier to destructure a sum type"
+    `);
+  });
+
+  it("requires a type annotation", () => {
+    expect(
+      compileAndPrint(`
+function foo(result) {
+  switch (result.type) {
+    case "OK": {
+      const {value} = result;
+      return value;
+    }
+    default:
+      return null;
+  }
+}
+`),
+    ).toMatchInlineSnapshot(`
+      "  1 | 
+        2 | function foo(result) {
+      > 3 |   switch (result.type) {
+          |          ^^^^^^
+        4 |     case \\"OK\\": {
+        5 |       const {value} = result;
+        6 |       return value;
+
+      Expected a type annotation on this expression to destructure a sum type"
     `);
   });
 });
@@ -268,7 +595,7 @@ describe("definition of variables", () => {
       "> 1 | function foo() {var x;}
           |                    ^
 
-      Expected definition"
+      Expected a definition with a value"
     `);
   });
 });
@@ -312,7 +639,7 @@ describe("destructuring of records by definition of variables", () => {
       "> 1 | function foo() {const {a, b} = o;}
           |                      ^^^^^^
 
-      Expected a type annotation for the destructuring"
+      Expected a type annotation for record destructuring"
     `);
   });
 
@@ -342,7 +669,7 @@ describe("destructuring of records by definition of variables", () => {
       "> 1 | function foo() {const {...a}: Rec = o;}
           |                       ^^^^
 
-      Unhandled pattern field"
+      Unhandled rest element for record destructuring"
     `);
   });
 });
