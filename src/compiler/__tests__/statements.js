@@ -280,7 +280,7 @@ describe("destructuring of sums", () => {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       const {value} = result;
       return value;
@@ -303,7 +303,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK":
     default:
       return null;
@@ -323,7 +323,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       const {value} = result, x = 12;
       return value
@@ -334,7 +334,7 @@ function foo(result) {
 }
 `),
     ).toMatchInlineSnapshot(`
-      "  3 |   switch ((result: Result).type) {
+      "  3 |   switch (result.type /* Result */) {
         4 |     case \\"OK\\": {
       > 5 |       const {value} = result, x = 12;
           |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -350,7 +350,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       var x;
       return x;
@@ -361,7 +361,7 @@ function foo(result) {
 }
 `),
     ).toMatchInlineSnapshot(`
-      "  3 |   switch ((result: Result).type) {
+      "  3 |   switch (result.type /* Result */) {
         4 |     case \\"OK\\": {
       > 5 |       var x;
           |          ^
@@ -377,7 +377,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       const {value}: Rec = otherResult;
       return value;
@@ -401,7 +401,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       const value = result;
       return value;
@@ -412,7 +412,7 @@ function foo(result) {
 }
 `),
     ).toMatchInlineSnapshot(`
-      "  3 |   switch ((result: Result).type) {
+      "  3 |   switch (result.type /* Result */) {
         4 |     case \\"OK\\": {
       > 5 |       const value = result;
           |            ^^^^^
@@ -428,7 +428,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       const {value}: Rec = f(x);
       return value;
@@ -452,7 +452,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK": {
       return 12;
     }
@@ -474,7 +474,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).type) {
+  switch (result.type /* Result */) {
     case "OK":
       return 12;
   }
@@ -492,7 +492,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((result: Result).kind) {
+  switch (result.kind /* Result */) {
     case "OK": {
       const {value} = result;
       return value;
@@ -505,8 +505,8 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "  1 | 
         2 | function foo(result) {
-      > 3 |   switch ((result: Result).kind) {
-          |                           ^^^^
+      > 3 |   switch (result.kind /* Result */) {
+          |                 ^^^^
         4 |     case \\"OK\\": {
         5 |       const {value} = result;
         6 |       return value;
@@ -519,7 +519,7 @@ function foo(result) {
     expect(
       compileAndPrint(`
 function foo(result) {
-  switch ((f(x): Result).type) {
+  switch (f(x).type /* Result */) {
     case "OK": {
       const {value} = result;
       return value;
@@ -532,8 +532,8 @@ function foo(result) {
     ).toMatchInlineSnapshot(`
       "  1 | 
         2 | function foo(result) {
-      > 3 |   switch ((f(x): Result).type) {
-          |           ^^^^
+      > 3 |   switch (f(x).type /* Result */) {
+          |          ^^^^
         4 |     case \\"OK\\": {
         5 |       const {value} = result;
         6 |       return value;
@@ -542,7 +542,7 @@ function foo(result) {
     `);
   });
 
-  it("requires a type annotation", () => {
+  it("requires the sum type in trailing comment", () => {
     expect(
       compileAndPrint(`
 function foo(result) {
@@ -560,12 +560,12 @@ function foo(result) {
       "  1 | 
         2 | function foo(result) {
       > 3 |   switch (result.type) {
-          |          ^^^^^^
+          |          ^^^^^^^^^^^
         4 |     case \\"OK\\": {
         5 |       const {value} = result;
         6 |       return value;
 
-      Expected a type annotation on this expression to destructure a sum type"
+      Expected a trailing comment with the sum type on which we discriminate"
     `);
   });
 });

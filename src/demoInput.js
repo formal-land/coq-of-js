@@ -81,7 +81,7 @@ type Status =
 const status: Status = ({type: "Error", message: "hi"}: Status);
 
 function getMessage(status: Status): string {
-  switch ((status: Status).type) {
+  switch (status.type /* Status */) {
     case "Error": {
       const {message} = status;
       return message;

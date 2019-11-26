@@ -363,66 +363,61 @@ export function* compileStatements(
             );
           }
 
-          switch (discriminant.object.type) {
-            case "TypeCastExpression": {
-              const {expression, typeAnnotation} = discriminant.object;
-              const sum = yield* Typ.compileIdentifier(
-                typeAnnotation.typeAnnotation,
-              );
+          const expression = discriminant.object;
 
-              switch (expression.type) {
-                case "Identifier": {
-                  const discriminantName = expression.name;
-                  const branches = yield* Monad.filterMap(
-                    statement.cases,
-                    function*({consequent, test}) {
-                      if (!test) {
-                        return null;
-                      }
+          switch (expression.type) {
+            case "Identifier": {
+              const discriminantName = expression.name;
+              const branches = yield* Monad.filterMap(
+                statement.cases,
+                function*({consequent, test}) {
+                  if (!test) {
+                    return null;
+                  }
 
-                      const {
-                        fields,
-                        trailingStatements,
-                      } = yield* getFieldsDestructuringFromHeadStatement(
-                        consequent,
-                        discriminantName,
-                      );
-
-                      return {
-                        body: yield* compileStatements(trailingStatements),
-                        fields,
-                        name: yield* getStringOfStringLiteral(test),
-                      };
-                    },
+                  const {
+                    fields,
+                    trailingStatements,
+                  } = yield* getFieldsDestructuringFromHeadStatement(
+                    consequent,
+                    discriminantName,
                   );
-                  const defaultCase =
-                    statement.cases.find(
-                      branch =>
-                        !branch.test &&
-                        !isEmptyDefaultBranch(branch.consequent),
-                    ) || null;
 
                   return {
-                    type: "SumDestruct",
-                    branches,
-                    defaultBranch:
-                      defaultCase &&
-                      (yield* compileStatements(defaultCase.consequent)),
-                    discriminant: yield* compile(expression),
-                    sum,
+                    body: yield* compileStatements(trailingStatements),
+                    fields,
+                    name: yield* getStringOfStringLiteral(test),
                   };
-                }
-                default:
-                  return yield* Monad.raise<t>(
-                    expression,
-                    "Expected a switch on an identifier to destructure a sum type",
-                  );
-              }
+                },
+              );
+              const defaultCase =
+                statement.cases.find(
+                  branch =>
+                    !branch.test && !isEmptyDefaultBranch(branch.consequent),
+                ) || null;
+              const firstComment =
+                discriminant.trailingComments &&
+                discriminant.trailingComments.length !== 0
+                  ? discriminant.trailingComments[0]
+                  : yield* Monad.raise<BabelAst.Comment>(
+                      discriminant,
+                      "Expected a trailing comment with the sum type on which we discriminate",
+                    );
+
+              return {
+                type: "SumDestruct",
+                branches,
+                defaultBranch:
+                  defaultCase &&
+                  (yield* compileStatements(defaultCase.consequent)),
+                discriminant: yield* compile(expression),
+                sum: firstComment.value.trim(),
+              };
             }
             default:
               return yield* Monad.raise<t>(
-                discriminant.object,
-                "Expected a type annotation on this expression to destructure a sum type",
+                expression,
+                "Expected a switch on an identifier to destructure a sum type",
               );
           }
         }
