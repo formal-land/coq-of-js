@@ -95,6 +95,10 @@ describe("records", () => {
           message : string;
           quantity : Z;
         }.
+        Definition set_message r message :=
+          {| message := message; quantity := r.(quantity); |}.
+        Definition set_quantity r quantity :=
+          {| message := r.(message); quantity := quantity; |}.
       End Status.
       Definition Status := Status.t."
     `);

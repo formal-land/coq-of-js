@@ -235,17 +235,35 @@ describe("objects as records", () => {
       "> 1 | const o = ({foo() {}}: Rec);
           |            ^^^^^^^^
 
-      Expected a named property"
+      Object methods not handled"
     `);
   });
 
-  it("does not handle records with spreads", () => {
-    expect(compileAndPrint(`const o = ({...rec}: Rec);`))
+  it("handles records with spreads", () => {
+    expect(compileAndPrint(`const o = ({...rec, a: "hi"}: Rec);`))
       .toMatchInlineSnapshot(`
-      "> 1 | const o = ({...rec}: Rec);
-          |            ^^^^^^
+      "Definition o :=
+        Rec.set_a rec \\"hi\\"."
+    `);
+  });
 
-      Expected a named property"
+  it("rejects spread elements which are not the first", () => {
+    expect(compileAndPrint(`const o = ({a: "hi", ...rec}: Rec);`))
+      .toMatchInlineSnapshot(`
+      "> 1 | const o = ({a: \\"hi\\", ...rec}: Rec);
+          |                     ^^^^^^
+
+      Spread element must be the first element of the object"
+    `);
+  });
+
+  it("expects only one spread element", () => {
+    expect(compileAndPrint(`const o = ({...rec1, ...rec2}: Rec);`))
+      .toMatchInlineSnapshot(`
+      "> 1 | const o = ({...rec1, ...rec2}: Rec);
+          |           ^^^^^^^^^^^^^^^^^^
+
+      At most one spread element per object is handled, found 2"
     `);
   });
 
@@ -294,6 +312,26 @@ describe("objects as sum types", () => {
           |                  ^^
 
       Expected a string literal"
+    `);
+  });
+
+  it("expects only one `type` field", () => {
+    expect(compileAndPrint(`const o = ({type: "Foo", type: "Bar"}: Status);`))
+      .toMatchInlineSnapshot(`
+      "> 1 | const o = ({type: \\"Foo\\", type: \\"Bar\\"}: Status);
+          |           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+      Ambiguous multiple \`type\` fields"
+    `);
+  });
+
+  it("does not handle spreads on sums", () => {
+    expect(compileAndPrint(`const o = ({...fields, type: "Foo"}: Status);`))
+      .toMatchInlineSnapshot(`
+      "> 1 | const o = ({...fields, type: \\"Foo\\"}: Status);
+          |           ^^^^^^^^^^^^^^^^^^^^^^^^
+
+      Spread elements in sum types are not handled"
     `);
   });
 });
