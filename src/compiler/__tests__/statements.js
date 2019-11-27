@@ -14,7 +14,8 @@ describe("header", () => {
       Local Open Scope Z.
 
       Definition x :=
-        12."
+        12.
+      "
     `);
   });
 });
@@ -23,7 +24,8 @@ describe("empty statements", () => {
   it("handles empty statements", () => {
     expect(compileAndPrint(`function foo() {}`)).toMatchInlineSnapshot(`
       "Definition foo :=
-        tt."
+        tt.
+      "
     `);
   });
 });
@@ -34,7 +36,8 @@ describe("block statements", () => {
       .toMatchInlineSnapshot(`
       "Definition foo :=
         let x := 12 in
-        x."
+        x.
+      "
     `);
   });
 });
@@ -44,14 +47,16 @@ describe("returns", () => {
     expect(compileAndPrint(`function foo() {return 12;}`))
       .toMatchInlineSnapshot(`
       "Definition foo :=
-        12."
+        12.
+      "
     `);
   });
 
   it("handles empty returns", () => {
     expect(compileAndPrint(`function foo() {return;}`)).toMatchInlineSnapshot(`
       "Definition foo :=
-        tt."
+        tt.
+      "
     `);
   });
 });
@@ -74,7 +79,8 @@ function foo() {
         match s with
         | Status.OK => true
         | Status.Error => false
-        end."
+        end.
+      "
     `);
   });
 
@@ -92,7 +98,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => true
-        end."
+        end.
+      "
     `);
   });
 
@@ -111,7 +118,8 @@ function foo() {
       "Definition foo :=
         match s with
         | Status.OK | Status.Error => true
-        end."
+        end.
+      "
     `);
   });
 
@@ -131,7 +139,8 @@ function foo() {
         match s with
         | Status.OK => tt
         | Status.Error => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -151,7 +160,8 @@ function foo() {
       "Definition foo :=
         match s with
         | Status.OK => 12
-        end."
+        end.
+      "
     `);
   });
 
@@ -172,7 +182,8 @@ function foo() {
       "Definition foo :=
         match s with
         | Status.OK => 12
-        end."
+        end.
+      "
     `);
   });
 
@@ -190,7 +201,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => (23 : Z)
-        end."
+        end.
+      "
     `);
   });
 
@@ -208,7 +220,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -228,7 +241,8 @@ function foo() {
         match s with
         | _ => let x := 12 in
           x
-        end."
+        end.
+      "
     `);
   });
 
@@ -245,7 +259,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -295,7 +310,8 @@ function foo(result) {
         match result with
         | Result.OK {| Result.OK.value := value; |} => value
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -315,7 +331,8 @@ function foo(result) {
         match result with
         | Result.OK _ => tt
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -393,7 +410,8 @@ function foo(result) {
         | Result.OK _ => let '{| Rec.value := value; |} := otherResult in
           value
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -444,7 +462,8 @@ function foo(result) {
         | Result.OK _ => let '{| Rec.value := value; |} := f x in
           value
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -466,7 +485,8 @@ function foo(result) {
         match result with
         | Result.OK _ => 12
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -484,7 +504,8 @@ function foo(result) {
       "Definition foo result :=
         match result with
         | Result.OK _ => 12
-        end."
+        end.
+      "
     `);
   });
 
@@ -576,7 +597,8 @@ describe("definition of variables", () => {
       .toMatchInlineSnapshot(`
       "Definition foo :=
         let x := 12 in
-        tt."
+        tt.
+      "
     `);
   });
 
@@ -629,7 +651,8 @@ describe("destructuring of records by definition of variables", () => {
       .toMatchInlineSnapshot(`
       "Definition foo :=
         let '{| Rec.a := a; Rec.b := b; |} := o in
-        tt."
+        tt.
+      "
     `);
   });
 

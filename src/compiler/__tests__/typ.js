@@ -16,7 +16,8 @@ describe("array types", () => {
   it("handles array types", () => {
     expect(compileAndPrint(`const a: number[] = [12];`)).toMatchInlineSnapshot(`
       "Definition a : list Z :=
-        [ 12 ]."
+        [ 12 ].
+      "
     `);
   });
 });
@@ -25,22 +26,26 @@ describe("existential types", () => {
   it("handles existential types", () => {
     expect(compileAndPrint(`const a: * = 12;`)).toMatchInlineSnapshot(`
       "Definition a : _ :=
-        12."
+        12.
+      "
     `);
   });
 });
 
 describe("function types", () => {
   it("handles function types", () => {
-    expect(
-      compileAndPrint(`type Print = (message: string) => void;`),
-    ).toMatchInlineSnapshot(`"Definition Print : Type := string -> unit."`);
+    expect(compileAndPrint(`type Print = (message: string) => void;`))
+      .toMatchInlineSnapshot(`
+      "Definition Print : Type := string -> unit.
+      "
+    `);
   });
 
   it("handles function types with type parameters", () => {
-    expect(compileAndPrint(`type Id = <A>(x: A) => A;`)).toMatchInlineSnapshot(
-      `"Definition Id : Type := forall {A : Type}, A -> A."`,
-    );
+    expect(compileAndPrint(`type Id = <A>(x: A) => A;`)).toMatchInlineSnapshot(`
+      "Definition Id : Type := forall {A : Type}, A -> A.
+      "
+    `);
   });
 });
 
@@ -48,7 +53,8 @@ describe("qualified type annotations", () => {
   it("handles qualified type annotations", () => {
     expect(compileAndPrint(`const a: Foo.t = 12;`)).toMatchInlineSnapshot(`
       "Definition a : Foo.t :=
-        12."
+        12.
+      "
     `);
   });
 });
@@ -90,9 +96,10 @@ describe("mixed type", () => {
 
 describe("nullable types", () => {
   it("handles nullable types", () => {
-    expect(compileAndPrint(`type t = ?string;`)).toMatchInlineSnapshot(
-      `"Definition t : Type := option string."`,
-    );
+    expect(compileAndPrint(`type t = ?string;`)).toMatchInlineSnapshot(`
+      "Definition t : Type := option string.
+      "
+    `);
   });
 });
 
@@ -132,15 +139,18 @@ describe("this type", () => {
 
 describe("tuple types", () => {
   it("handles tuple types", () => {
-    expect(compileAndPrint(`type t = [string, number];`)).toMatchInlineSnapshot(
-      `"Definition t : Type := string * Z."`,
-    );
+    expect(compileAndPrint(`type t = [string, number];`))
+      .toMatchInlineSnapshot(`
+      "Definition t : Type := string * Z.
+      "
+    `);
   });
 
   it("handles empty tuple types", () => {
-    expect(compileAndPrint(`type t = [];`)).toMatchInlineSnapshot(
-      `"Definition t : Type := unit."`,
-    );
+    expect(compileAndPrint(`type t = [];`)).toMatchInlineSnapshot(`
+      "Definition t : Type := unit.
+      "
+    `);
   });
 
   it("does not handle tuple types with a single element", () => {

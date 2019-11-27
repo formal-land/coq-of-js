@@ -5,14 +5,16 @@ describe("arrays", () => {
   it("handles arrays", () => {
     expect(compileAndPrint(`const a = [12];`)).toMatchInlineSnapshot(`
       "Definition a :=
-        [ 12 ]."
+        [ 12 ].
+      "
     `);
   });
 
   it("handles empty arrays", () => {
     expect(compileAndPrint(`const a = [];`)).toMatchInlineSnapshot(`
       "Definition a :=
-        []."
+        [].
+      "
     `);
   });
 
@@ -39,7 +41,8 @@ describe("arrow functions", () => {
   it("handles arrow functions", () => {
     expect(compileAndPrint(`const f = x => x;`)).toMatchInlineSnapshot(`
       "Definition f :=
-        fun x => x."
+        fun x => x.
+      "
     `);
   });
 
@@ -47,7 +50,8 @@ describe("arrow functions", () => {
     expect(compileAndPrint(`const f = <A>(x: A): A => x;`))
       .toMatchInlineSnapshot(`
       "Definition f :=
-        fun {A : Type} (x : A) => x."
+        fun {A : Type} (x : A) => x.
+      "
     `);
   });
 
@@ -65,14 +69,16 @@ describe("binary expressions", () => {
   it("handles binary expressions", () => {
     expect(compileAndPrint(`const n = 1 + 1;`)).toMatchInlineSnapshot(`
       "Definition n :=
-        1 + 1."
+        1 + 1.
+      "
     `);
   });
 
   it("handles nested binary expressions", () => {
     expect(compileAndPrint(`const n = (1 + 2) * 3;`)).toMatchInlineSnapshot(`
       "Definition n :=
-        (1 + 2) * 3."
+        (1 + 2) * 3.
+      "
     `);
   });
 });
@@ -81,7 +87,8 @@ describe("function calls", () => {
   it("handles function calls", () => {
     expect(compileAndPrint(`const y = f(x);`)).toMatchInlineSnapshot(`
       "Definition y :=
-        f x."
+        f x.
+      "
     `);
   });
 
@@ -108,7 +115,8 @@ describe("ternary expressions", () => {
   it("handles ternary expressions", () => {
     expect(compileAndPrint(`const n = true ? 12 : 0;`)).toMatchInlineSnapshot(`
       "Definition n :=
-        if true then 12 else 0."
+        if true then 12 else 0.
+      "
     `);
   });
 });
@@ -118,7 +126,8 @@ describe("functions", () => {
     expect(compileAndPrint(`const f = function (x) {return x};`))
       .toMatchInlineSnapshot(`
       "Definition f :=
-        fun x => x."
+        fun x => x.
+      "
     `);
   });
 });
@@ -127,7 +136,8 @@ describe("logical expressions", () => {
   it("handles logical expressions", () => {
     expect(compileAndPrint(`const b = true && false;`)).toMatchInlineSnapshot(`
       "Definition b :=
-        true && false."
+        true && false.
+      "
     `);
   });
 });
@@ -136,7 +146,8 @@ describe("member accesses", () => {
   it("handles member accesses from records", () => {
     expect(compileAndPrint(`const a = (o: Rec).a;`)).toMatchInlineSnapshot(`
       "Definition a :=
-        o.(Rec.a)."
+        o.(Rec.a).
+      "
     `);
   });
 
@@ -199,7 +210,8 @@ describe("nulls", () => {
   it("handles nulls", () => {
     expect(compileAndPrint(`const n = null;`)).toMatchInlineSnapshot(`
       "Definition n :=
-        tt."
+        tt.
+      "
     `);
   });
 });
@@ -208,7 +220,8 @@ describe("objects as records", () => {
   it("handles empty objects", () => {
     expect(compileAndPrint(`const o = {};`)).toMatchInlineSnapshot(`
       "Definition o :=
-        tt."
+        tt.
+      "
     `);
   });
 
@@ -225,7 +238,8 @@ describe("objects as records", () => {
     expect(compileAndPrint(`const o = ({a: "hi", "b": 12}: Rec);`))
       .toMatchInlineSnapshot(`
       "Definition o :=
-        {| Rec.a := \\"hi\\"; Rec.b := 12; |}."
+        {| Rec.a := \\"hi\\"; Rec.b := 12; |}.
+      "
     `);
   });
 
@@ -243,7 +257,8 @@ describe("objects as records", () => {
     expect(compileAndPrint(`const o = ({...rec, a: "hi"}: Rec);`))
       .toMatchInlineSnapshot(`
       "Definition o :=
-        Rec.set_a rec \\"hi\\"."
+        Rec.set_a rec \\"hi\\".
+      "
     `);
   });
 
@@ -293,7 +308,8 @@ describe("objects as sum types", () => {
     expect(compileAndPrint(`const o = ({type: "Foo", a: 12}: Status);`))
       .toMatchInlineSnapshot(`
       "Definition o :=
-        Status.Foo {| Status.Foo.a := 12; |}."
+        Status.Foo {| Status.Foo.a := 12; |}.
+      "
     `);
   });
 
@@ -301,7 +317,8 @@ describe("objects as sum types", () => {
     expect(compileAndPrint(`const o = ({type: "Foo"}: Status);`))
       .toMatchInlineSnapshot(`
       "Definition o :=
-        Status.Foo tt."
+        Status.Foo tt.
+      "
     `);
   });
 
@@ -341,7 +358,8 @@ describe("enums", () => {
     expect(compileAndPrint(`const e = ("Green": Kind);`))
       .toMatchInlineSnapshot(`
       "Definition e :=
-        Kind.Green."
+        Kind.Green.
+      "
     `);
   });
 
@@ -361,7 +379,8 @@ describe("type casts", () => {
     expect(compileAndPrint(`const b = (true: boolean);`))
       .toMatchInlineSnapshot(`
       "Definition b :=
-        (true : bool)."
+        (true : bool).
+      "
     `);
   });
 });
@@ -370,7 +389,8 @@ describe("unary expressions", () => {
   it("handles unary expressions", () => {
     expect(compileAndPrint(`const n = +0;`)).toMatchInlineSnapshot(`
       "Definition n :=
-        + 0."
+        + 0.
+      "
     `);
   });
 });
