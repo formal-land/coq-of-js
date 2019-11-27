@@ -61,7 +61,7 @@ describe("destructuring of enums", () => {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return true;
     case "Error":
@@ -82,7 +82,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       return true;
   }
@@ -100,7 +100,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
     case "Error":
       return true;
@@ -119,7 +119,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return null;
     case "Error":
@@ -139,7 +139,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return 12;
     default:
@@ -159,7 +159,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return 12;
     default: {
@@ -180,7 +180,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       return (23: number);
   }
@@ -198,7 +198,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       return;
   }
@@ -216,7 +216,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       const x = 12;
       return x;
@@ -236,7 +236,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
   }
 }
@@ -249,7 +249,7 @@ function foo() {
     `);
   });
 
-  it("expects a type annotation on the discriminant", () => {
+  it("requires the enum type in trailing comment", () => {
     expect(
       compileAndPrint(`
 function foo() {
@@ -270,7 +270,7 @@ function foo() {
         5 |       return true;
         6 |     case \\"Error\\":
 
-      Missing type annotation to destructure an enum"
+      Expected a trailing comment with the type name on which we discriminate"
     `);
   });
 });
@@ -565,7 +565,7 @@ function foo(result) {
         5 |       const {value} = result;
         6 |       return value;
 
-      Expected a trailing comment with the sum type on which we discriminate"
+      Expected a trailing comment with the type name on which we discriminate"
     `);
   });
 });

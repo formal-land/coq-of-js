@@ -356,11 +356,20 @@ export function* compileStatements(
       ]);
     case "ReturnStatement":
       return statement.argument ? yield* compile(statement.argument) : tt;
-    case "SwitchStatement":
-      switch (statement.discriminant.type) {
+    case "SwitchStatement": {
+      const {discriminant, cases} = statement;
+      const firstTrailingComment =
+        discriminant.trailingComments &&
+        discriminant.trailingComments.length !== 0
+          ? discriminant.trailingComments[0].value.trim()
+          : yield* Monad.raise<string>(
+              discriminant,
+              "Expected a trailing comment with the type name on which we discriminate",
+            );
+
+      switch (discriminant.type) {
         // Destructuring of sum type.
         case "MemberExpression": {
-          const {discriminant} = statement;
           const field = yield* Typ.getObjectKeyName(discriminant.property);
 
           if (field !== "type") {
@@ -375,41 +384,33 @@ export function* compileStatements(
           switch (expression.type) {
             case "Identifier": {
               const discriminantName = expression.name;
-              const branches = yield* Monad.filterMap(
-                statement.cases,
-                function*({consequent, test}) {
-                  if (!test) {
-                    return null;
-                  }
+              const branches = yield* Monad.filterMap(cases, function*({
+                consequent,
+                test,
+              }) {
+                if (!test) {
+                  return null;
+                }
 
-                  const {
-                    fields,
-                    trailingStatements,
-                  } = yield* getFieldsDestructuringFromHeadStatement(
-                    consequent,
-                    discriminantName,
-                  );
+                const {
+                  fields,
+                  trailingStatements,
+                } = yield* getFieldsDestructuringFromHeadStatement(
+                  consequent,
+                  discriminantName,
+                );
 
-                  return {
-                    body: yield* compileStatements(trailingStatements),
-                    fields,
-                    name: yield* getStringOfStringLiteral(test),
-                  };
-                },
-              );
+                return {
+                  body: yield* compileStatements(trailingStatements),
+                  fields,
+                  name: yield* getStringOfStringLiteral(test),
+                };
+              });
               const defaultCase =
-                statement.cases.find(
+                cases.find(
                   branch =>
                     !branch.test && !isEmptyDefaultBranch(branch.consequent),
                 ) || null;
-              const firstComment =
-                discriminant.trailingComments &&
-                discriminant.trailingComments.length !== 0
-                  ? discriminant.trailingComments[0]
-                  : yield* Monad.raise<BabelAst.Comment>(
-                      discriminant,
-                      "Expected a trailing comment with the sum type on which we discriminate",
-                    );
 
               return {
                 type: "SumDestruct",
@@ -418,7 +419,7 @@ export function* compileStatements(
                   defaultCase &&
                   (yield* compileStatements(defaultCase.consequent)),
                 discriminant: yield* compile(expression),
-                sum: firstComment.value.trim(),
+                sum: firstTrailingComment,
               };
             }
             default:
@@ -429,15 +430,14 @@ export function* compileStatements(
           }
         }
         // Destructuring of enum.
-        case "TypeCastExpression": {
-          const {expression, typeAnnotation} = statement.discriminant;
+        default: {
           const {accumulatedNames, branches} = yield* Monad.reduce<
             {
               accumulatedNames: string[],
               branches: {body: t, names: string[]}[],
             },
             BabelAst.SwitchCase,
-          >(statement.cases, {accumulatedNames: [], branches: []}, function*(
+          >(cases, {accumulatedNames: [], branches: []}, function*(
             {accumulatedNames, branches},
             branch,
           ) {
@@ -464,7 +464,7 @@ export function* compileStatements(
             };
           });
           const defaultCase =
-            statement.cases.find(
+            cases.find(
               branch =>
                 !branch.test && !isEmptyDefaultBranch(branch.consequent),
             ) || null;
@@ -479,18 +479,12 @@ export function* compileStatements(
             ],
             defaultBranch:
               defaultCase && (yield* compileStatements(defaultCase.consequent)),
-            discriminant: yield* compile(expression),
-            typName: yield* Typ.compileIdentifier(
-              typeAnnotation.typeAnnotation,
-            ),
+            discriminant: yield* compile(discriminant),
+            typName: firstTrailingComment,
           };
         }
-        default:
-          return yield* Monad.raise<t>(
-            statement.discriminant,
-            "Missing type annotation to destructure an enum",
-          );
       }
+    }
     case "VariableDeclaration": {
       if (statement.declarations.length !== 1) {
         return yield* Monad.raise<t>(

@@ -54,7 +54,7 @@ type Enum = "aa" | "bb" | "gg";
 const aa = ("aa": Enum);
 
 function getEnumIndex(e: Enum): number {
-  switch ((e: Enum)) {
+  switch (e /* Enum */) {
     case "aa":
       return 0;
     case "bb":
