@@ -14,7 +14,8 @@ describe("header", () => {
       Local Open Scope Z.
 
       Definition x :=
-        12."
+        12.
+      "
     `);
   });
 });
@@ -23,7 +24,8 @@ describe("empty statements", () => {
   it("handles empty statements", () => {
     expect(compileAndPrint(`function foo() {}`)).toMatchInlineSnapshot(`
       "Definition foo :=
-        tt."
+        tt.
+      "
     `);
   });
 });
@@ -34,7 +36,8 @@ describe("block statements", () => {
       .toMatchInlineSnapshot(`
       "Definition foo :=
         let x := 12 in
-        x."
+        x.
+      "
     `);
   });
 });
@@ -44,14 +47,16 @@ describe("returns", () => {
     expect(compileAndPrint(`function foo() {return 12;}`))
       .toMatchInlineSnapshot(`
       "Definition foo :=
-        12."
+        12.
+      "
     `);
   });
 
   it("handles empty returns", () => {
     expect(compileAndPrint(`function foo() {return;}`)).toMatchInlineSnapshot(`
       "Definition foo :=
-        tt."
+        tt.
+      "
     `);
   });
 });
@@ -61,7 +66,7 @@ describe("destructuring of enums", () => {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return true;
     case "Error":
@@ -74,7 +79,8 @@ function foo() {
         match s with
         | Status.OK => true
         | Status.Error => false
-        end."
+        end.
+      "
     `);
   });
 
@@ -82,7 +88,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       return true;
   }
@@ -92,7 +98,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => true
-        end."
+        end.
+      "
     `);
   });
 
@@ -100,7 +107,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
     case "Error":
       return true;
@@ -111,7 +118,8 @@ function foo() {
       "Definition foo :=
         match s with
         | Status.OK | Status.Error => true
-        end."
+        end.
+      "
     `);
   });
 
@@ -119,7 +127,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return null;
     case "Error":
@@ -131,7 +139,8 @@ function foo() {
         match s with
         | Status.OK => tt
         | Status.Error => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -139,7 +148,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return 12;
     default:
@@ -151,7 +160,8 @@ function foo() {
       "Definition foo :=
         match s with
         | Status.OK => 12
-        end."
+        end.
+      "
     `);
   });
 
@@ -159,7 +169,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     case "OK":
       return 12;
     default: {
@@ -172,7 +182,8 @@ function foo() {
       "Definition foo :=
         match s with
         | Status.OK => 12
-        end."
+        end.
+      "
     `);
   });
 
@@ -180,7 +191,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       return (23: number);
   }
@@ -190,7 +201,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => (23 : Z)
-        end."
+        end.
+      "
     `);
   });
 
@@ -198,7 +210,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       return;
   }
@@ -208,7 +220,8 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -216,7 +229,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
       const x = 12;
       return x;
@@ -228,7 +241,8 @@ function foo() {
         match s with
         | _ => let x := 12 in
           x
-        end."
+        end.
+      "
     `);
   });
 
@@ -236,7 +250,7 @@ function foo() {
     expect(
       compileAndPrint(`
 function foo() {
-  switch ((s: Status)) {
+  switch (s /* Status */) {
     default:
   }
 }
@@ -245,11 +259,12 @@ function foo() {
       "Definition foo :=
         match s with
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
-  it("expects a type annotation on the discriminant", () => {
+  it("requires the enum type in trailing comment", () => {
     expect(
       compileAndPrint(`
 function foo() {
@@ -270,7 +285,7 @@ function foo() {
         5 |       return true;
         6 |     case \\"Error\\":
 
-      Missing type annotation to destructure an enum"
+      Expected a trailing comment with the type name on which we discriminate"
     `);
   });
 });
@@ -295,7 +310,8 @@ function foo(result) {
         match result with
         | Result.OK {| Result.OK.value := value; |} => value
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -315,7 +331,8 @@ function foo(result) {
         match result with
         | Result.OK _ => tt
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -393,7 +410,8 @@ function foo(result) {
         | Result.OK _ => let '{| Rec.value := value; |} := otherResult in
           value
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -444,7 +462,8 @@ function foo(result) {
         | Result.OK _ => let '{| Rec.value := value; |} := f x in
           value
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -466,7 +485,8 @@ function foo(result) {
         match result with
         | Result.OK _ => 12
         | _ => tt
-        end."
+        end.
+      "
     `);
   });
 
@@ -484,7 +504,8 @@ function foo(result) {
       "Definition foo result :=
         match result with
         | Result.OK _ => 12
-        end."
+        end.
+      "
     `);
   });
 
@@ -565,7 +586,7 @@ function foo(result) {
         5 |       const {value} = result;
         6 |       return value;
 
-      Expected a trailing comment with the sum type on which we discriminate"
+      Expected a trailing comment with the type name on which we discriminate"
     `);
   });
 });
@@ -576,7 +597,8 @@ describe("definition of variables", () => {
       .toMatchInlineSnapshot(`
       "Definition foo :=
         let x := 12 in
-        tt."
+        tt.
+      "
     `);
   });
 
@@ -629,7 +651,8 @@ describe("destructuring of records by definition of variables", () => {
       .toMatchInlineSnapshot(`
       "Definition foo :=
         let '{| Rec.a := a; Rec.b := b; |} := o in
-        tt."
+        tt.
+      "
     `);
   });
 

@@ -1,6 +1,7 @@
 // @flow
 import * as BabelAst from "./babel-ast.js";
 import * as Doc from "./doc.js";
+import * as Expression from "./expression.js";
 import * as Monad from "./monad.js";
 import * as Typ from "./typ.js";
 import * as Util from "./util.js";
@@ -224,6 +225,7 @@ function printModule(name: string, doc: Doc.t): Doc.t {
 function printRecord(
   name: string,
   fields: {name: string, typ: Typ.t}[],
+  withSetters: boolean,
 ): Doc.t {
   return Doc.concat([
     Doc.group(
@@ -247,6 +249,49 @@ function printRecord(
     ),
     Doc.hardline,
     "}.",
+    ...(withSetters
+      ? [
+          Doc.hardline,
+          Doc.join(
+            Doc.hardline,
+            fields.map(({name, typ}) =>
+              Doc.group(
+                Doc.concat([
+                  Doc.group(
+                    Doc.concat(["Definition", Doc.line, `set_${name}`]),
+                  ),
+                  Doc.indent(
+                    Doc.group(
+                      Doc.concat([
+                        Doc.line,
+                        "r",
+                        Doc.line,
+                        name,
+                        Doc.line,
+                        ":=",
+                      ]),
+                    ),
+                  ),
+                  Doc.indent(
+                    Doc.concat([
+                      Doc.line,
+                      Expression.printRecordInstance(
+                        null,
+                        fields.map(field => ({
+                          name: field.name,
+                          value:
+                            field.name === name ? name : `r.(${field.name})`,
+                        })),
+                      ),
+                      ".",
+                    ]),
+                  ),
+                ]),
+              ),
+            ),
+          ),
+        ]
+      : []),
   ]);
 }
 
@@ -283,7 +328,7 @@ export function print(name: string, typDefinition: t): Doc.t {
     }
     case "Record":
       return Doc.concat([
-        printModule(name, printRecord("t", typDefinition.fields)),
+        printModule(name, printRecord("t", typDefinition.fields, true)),
         Doc.hardline,
         printDefineTypeAsModule(name),
       ]);
@@ -296,7 +341,7 @@ export function print(name: string, typDefinition: t): Doc.t {
               constructor.fields.length !== 0
                 ? printModule(
                     constructor.name,
-                    printRecord("t", constructor.fields),
+                    printRecord("t", constructor.fields, false),
                   )
                 : null,
             ),

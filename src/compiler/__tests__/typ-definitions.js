@@ -27,7 +27,8 @@ type e = empty;
 
       Definition o : Type := unit.
 
-      Definition e : Type := Empty_set."
+      Definition e : Type := Empty_set.
+      "
     `);
   });
 });
@@ -42,7 +43,8 @@ describe("enums", () => {
         | hello
         | h.
       End SayHi.
-      Definition SayHi := SayHi.t."
+      Definition SayHi := SayHi.t.
+      "
     `);
 
     expect(compileAndPrint('type Single = "s";')).toMatchInlineSnapshot(`
@@ -50,7 +52,8 @@ describe("enums", () => {
         Inductive t :=
         | s.
       End Single.
-      Definition Single := Single.t."
+      Definition Single := Single.t.
+      "
     `);
   });
 
@@ -95,8 +98,13 @@ describe("records", () => {
           message : string;
           quantity : Z;
         }.
+        Definition set_message r message :=
+          {| message := message; quantity := r.(quantity); |}.
+        Definition set_quantity r quantity :=
+          {| message := r.(message); quantity := quantity; |}.
       End Status.
-      Definition Status := Status.t."
+      Definition Status := Status.t.
+      "
     `);
   });
 
@@ -162,7 +170,8 @@ describe("sum types", () => {
         | Nothing (_ : unit)
         | Success (_ : Success.t).
       End Status.
-      Definition Status := Status.t."
+      Definition Status := Status.t.
+      "
     `);
 
     expect(
@@ -183,7 +192,8 @@ describe("sum types", () => {
         Inductive t :=
         | Error (_ : Error.t).
       End Status.
-      Definition Status := Status.t."
+      Definition Status := Status.t.
+      "
     `);
   });
 

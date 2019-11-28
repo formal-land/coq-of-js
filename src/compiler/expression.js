@@ -84,6 +84,13 @@ export type t =
       record: string,
     }
   | {
+      type: "RecordUpdate",
+      field: string,
+      object: t,
+      record: string,
+      update: t,
+    }
+  | {
       type: "SumDestruct",
       branches: {body: t, fields: LeftValueRecordField[], name: string}[],
       defaultBranch: ?t,
@@ -349,11 +356,20 @@ export function* compileStatements(
       ]);
     case "ReturnStatement":
       return statement.argument ? yield* compile(statement.argument) : tt;
-    case "SwitchStatement":
-      switch (statement.discriminant.type) {
+    case "SwitchStatement": {
+      const {discriminant, cases} = statement;
+      const firstTrailingComment =
+        discriminant.trailingComments &&
+        discriminant.trailingComments.length !== 0
+          ? discriminant.trailingComments[0].value.trim()
+          : yield* Monad.raise<string>(
+              discriminant,
+              "Expected a trailing comment with the type name on which we discriminate",
+            );
+
+      switch (discriminant.type) {
         // Destructuring of sum type.
         case "MemberExpression": {
-          const {discriminant} = statement;
           const field = yield* Typ.getObjectKeyName(discriminant.property);
 
           if (field !== "type") {
@@ -368,41 +384,33 @@ export function* compileStatements(
           switch (expression.type) {
             case "Identifier": {
               const discriminantName = expression.name;
-              const branches = yield* Monad.filterMap(
-                statement.cases,
-                function*({consequent, test}) {
-                  if (!test) {
-                    return null;
-                  }
+              const branches = yield* Monad.filterMap(cases, function*({
+                consequent,
+                test,
+              }) {
+                if (!test) {
+                  return null;
+                }
 
-                  const {
-                    fields,
-                    trailingStatements,
-                  } = yield* getFieldsDestructuringFromHeadStatement(
-                    consequent,
-                    discriminantName,
-                  );
+                const {
+                  fields,
+                  trailingStatements,
+                } = yield* getFieldsDestructuringFromHeadStatement(
+                  consequent,
+                  discriminantName,
+                );
 
-                  return {
-                    body: yield* compileStatements(trailingStatements),
-                    fields,
-                    name: yield* getStringOfStringLiteral(test),
-                  };
-                },
-              );
+                return {
+                  body: yield* compileStatements(trailingStatements),
+                  fields,
+                  name: yield* getStringOfStringLiteral(test),
+                };
+              });
               const defaultCase =
-                statement.cases.find(
+                cases.find(
                   branch =>
                     !branch.test && !isEmptyDefaultBranch(branch.consequent),
                 ) || null;
-              const firstComment =
-                discriminant.trailingComments &&
-                discriminant.trailingComments.length !== 0
-                  ? discriminant.trailingComments[0]
-                  : yield* Monad.raise<BabelAst.Comment>(
-                      discriminant,
-                      "Expected a trailing comment with the sum type on which we discriminate",
-                    );
 
               return {
                 type: "SumDestruct",
@@ -411,7 +419,7 @@ export function* compileStatements(
                   defaultCase &&
                   (yield* compileStatements(defaultCase.consequent)),
                 discriminant: yield* compile(expression),
-                sum: firstComment.value.trim(),
+                sum: firstTrailingComment,
               };
             }
             default:
@@ -422,15 +430,14 @@ export function* compileStatements(
           }
         }
         // Destructuring of enum.
-        case "TypeCastExpression": {
-          const {expression, typeAnnotation} = statement.discriminant;
+        default: {
           const {accumulatedNames, branches} = yield* Monad.reduce<
             {
               accumulatedNames: string[],
               branches: {body: t, names: string[]}[],
             },
             BabelAst.SwitchCase,
-          >(statement.cases, {accumulatedNames: [], branches: []}, function*(
+          >(cases, {accumulatedNames: [], branches: []}, function*(
             {accumulatedNames, branches},
             branch,
           ) {
@@ -457,7 +464,7 @@ export function* compileStatements(
             };
           });
           const defaultCase =
-            statement.cases.find(
+            cases.find(
               branch =>
                 !branch.test && !isEmptyDefaultBranch(branch.consequent),
             ) || null;
@@ -472,18 +479,12 @@ export function* compileStatements(
             ],
             defaultBranch:
               defaultCase && (yield* compileStatements(defaultCase.consequent)),
-            discriminant: yield* compile(expression),
-            typName: yield* Typ.compileIdentifier(
-              typeAnnotation.typeAnnotation,
-            ),
+            discriminant: yield* compile(discriminant),
+            typName: firstTrailingComment,
           };
         }
-        default:
-          return yield* Monad.raise<t>(
-            statement.discriminant,
-            "Missing type annotation to destructure an enum",
-          );
       }
+    }
     case "VariableDeclaration": {
       if (statement.declarations.length !== 1) {
         return yield* Monad.raise<t>(
@@ -695,51 +696,109 @@ export function* compile(expression: BabelAst.Expression): Monad.t<t> {
     case "TypeCastExpression": {
       switch (expression.expression.type) {
         case "ObjectExpression": {
-          const [names, fields] = yield* Monad.reduce(
+          const [names, fields, spreads] = yield* Monad.reduce(
             expression.expression.properties,
-            [[], []],
-            function*([names, fields], property) {
-              if (property.type !== "ObjectProperty") {
-                return yield* Monad.raise<[*, *]>(
-                  property,
-                  "Expected a named property",
-                );
+            ([[], [], []]: [string[], RecordField[], t[]]),
+            function*([names, fields, spreads], property) {
+              switch (property.type) {
+                case "ObjectMethod":
+                  return yield* Monad.raise<[*, *, *]>(
+                    property,
+                    "Object methods not handled",
+                  );
+                case "ObjectProperty": {
+                  if (property.computed) {
+                    return yield* Monad.raise<[*, *, *]>(
+                      property.key,
+                      "Unhandled computed property name",
+                    );
+                  }
+
+                  const name = yield* getObjectPropertyName(property);
+                  // Because this seems to be the case here and for
+                  // performance reasons for the type checking.
+                  const value: BabelAst.Expression = (property.value: any);
+
+                  if (name === "type") {
+                    return [
+                      [...names, yield* getStringOfStringLiteral(value)],
+                      fields,
+                      spreads,
+                    ];
+                  }
+
+                  return [
+                    names,
+                    [...fields, {name, value: yield* compile(value)}],
+                    spreads,
+                  ];
+                }
+                case "SpreadElement":
+                  if (names.length !== 0 || fields.length !== 0) {
+                    yield* Monad.raise<[*, *, *]>(
+                      property,
+                      "Spread element must be the first element of the object",
+                    );
+                  }
+
+                  return [
+                    names,
+                    fields,
+                    [...spreads, yield* compile(property.argument)],
+                  ];
+                /* istanbul ignore next */
+                default:
+                  return property;
               }
-
-              if (property.computed) {
-                return yield* Monad.raise<[*, *]>(
-                  property.key,
-                  "Unhandled computed property name",
-                );
-              }
-
-              const name = yield* getObjectPropertyName(property);
-              // Because this seems to be the case here and for
-              // performance reasons for the type checking.
-              const value: BabelAst.Expression = (property.value: any);
-
-              if (name === "type") {
-                return [
-                  [...names, yield* getStringOfStringLiteral(value)],
-                  fields,
-                ];
-              }
-
-              return [names, [...fields, {name, value: yield* compile(value)}]];
             },
           );
           const typName = yield* Typ.compileIdentifier(
             expression.typeAnnotation.typeAnnotation,
           );
 
-          return names.length === 0
-            ? {type: "RecordInstance", record: typName, fields}
-            : {
-                type: "SumInstance",
-                constr: names[0],
-                fields,
-                sum: typName,
-              };
+          if (names.length >= 2) {
+            return yield* Monad.raise<t>(
+              expression.expression,
+              "Ambiguous multiple `type` fields",
+            );
+          }
+          if (spreads.length >= 2) {
+            return yield* Monad.raise<t>(
+              expression.expression,
+              `At most one spread element per object is handled, found ${spreads.length}`,
+            );
+          }
+
+          if (names.length === 0) {
+            if (spreads.length === 0) {
+              return {type: "RecordInstance", record: typName, fields};
+            }
+
+            return fields.reduce(
+              (accumulator, field) => ({
+                type: "RecordUpdate",
+                field: field.name,
+                object: accumulator,
+                record: typName,
+                update: field.value,
+              }),
+              spreads[0],
+            );
+          }
+
+          if (spreads.length === 0) {
+            return {
+              type: "SumInstance",
+              constr: names[0],
+              fields,
+              sum: typName,
+            };
+          }
+
+          return yield* Monad.raise<t>(
+            expression.expression,
+            "Spread elements in sum types are not handled",
+          );
         }
         case "StringLiteral": {
           const {value} = expression.expression;
@@ -796,8 +855,19 @@ export function printFunArguments(funArguments: FunArgument[]): Doc.t {
   );
 }
 
-function printRecordInstance(
-  record: string,
+function printCallExpression(
+  needParens: boolean,
+  callee: Doc.t,
+  args: Doc.t[],
+): Doc.t {
+  return Doc.paren(
+    needParens,
+    Doc.group(Doc.indent(Doc.join(Doc.line, [callee, ...args]))),
+  );
+}
+
+export function printRecordInstance(
+  record: ?string,
   fields: {name: string, value: Doc.t}[],
 ): Doc.t {
   return Doc.group(
@@ -810,7 +880,13 @@ function printRecordInstance(
               Doc.line,
               Doc.group(
                 Doc.concat([
-                  Doc.group(Doc.concat([`${record}.${name}`, Doc.line, ":="])),
+                  Doc.group(
+                    Doc.concat([
+                      record ? `${record}.${name}` : name,
+                      Doc.line,
+                      ":=",
+                    ]),
+                  ),
                   Doc.indent(Doc.concat([Doc.line, value, ";"])),
                 ]),
               ),
@@ -950,16 +1026,10 @@ export function print(needParens: boolean, expression: t): Doc.t {
         ),
       );
     case "CallExpression":
-      return Doc.paren(
+      return printCallExpression(
         needParens,
-        Doc.group(
-          Doc.indent(
-            Doc.join(Doc.line, [
-              print(true, expression.callee),
-              ...expression.arguments.map(argument => print(true, argument)),
-            ]),
-          ),
-        ),
+        print(true, expression.callee),
+        expression.arguments.map(argument => print(true, argument)),
       );
     case "ConditionalExpression": {
       return Doc.paren(
@@ -1079,6 +1149,12 @@ export function print(needParens: boolean, expression: t): Doc.t {
           Doc.softline,
           ")",
         ]),
+      );
+    case "RecordUpdate":
+      return printCallExpression(
+        needParens,
+        `${expression.record}.set_${expression.field}`,
+        [print(true, expression.object), print(true, expression.update)],
       );
     case "SumDestruct": {
       const {branches, defaultBranch, discriminant, sum} = expression;

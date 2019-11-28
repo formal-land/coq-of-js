@@ -25,69 +25,86 @@ describe("classes", () => {
 
 describe("debugger", () => {
   it("ignores debugger statements", () => {
-    expect(compileAndPrint(`debugger;`)).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`debugger;`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 });
 
 describe("declare", () => {
   it("ignores declare class", () => {
-    expect(compileAndPrint(`declare class Foo {};`)).toMatchInlineSnapshot(
-      `""`,
-    );
+    expect(compileAndPrint(`declare class Foo {};`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare export all", () => {
-    expect(
-      compileAndPrint(`declare export * from "foo";`),
-    ).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`declare export * from "foo";`))
+      .toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare export", () => {
-    expect(
-      compileAndPrint(`declare export function foo(): void;`),
-    ).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`declare export function foo(): void;`))
+      .toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare function", () => {
-    expect(
-      compileAndPrint(`declare function id<A>(x: A): A;`),
-    ).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`declare function id<A>(x: A): A;`))
+      .toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare interface", () => {
-    expect(compileAndPrint(`declare interface Foo {};`)).toMatchInlineSnapshot(
-      `""`,
-    );
+    expect(compileAndPrint(`declare interface Foo {};`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare module", () => {
-    expect(compileAndPrint(`declare module "foo" {};`)).toMatchInlineSnapshot(
-      `""`,
-    );
+    expect(compileAndPrint(`declare module "foo" {};`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare module exports", () => {
-    expect(
-      compileAndPrint(`declare module.exports: {};`),
-    ).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`declare module.exports: {};`))
+      .toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare opaque type", () => {
-    expect(compileAndPrint(`declare opaque type N;`)).toMatchInlineSnapshot(
-      `""`,
-    );
+    expect(compileAndPrint(`declare opaque type N;`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare type alias", () => {
-    expect(compileAndPrint(`declare type N = number;`)).toMatchInlineSnapshot(
-      `""`,
-    );
+    expect(compileAndPrint(`declare type N = number;`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("ignores declare variable", () => {
-    expect(compileAndPrint(`declare var n: number;`)).toMatchInlineSnapshot(
-      `""`,
-    );
+    expect(compileAndPrint(`declare var n: number;`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 });
 
@@ -104,7 +121,10 @@ describe("do-while", () => {
 
 describe("empty statements", () => {
   it("ignores empty statements", () => {
-    expect(compileAndPrint(`;`)).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`;`)).toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 });
 
@@ -139,7 +159,8 @@ describe("exports", () => {
   it("handles named exports", () => {
     expect(compileAndPrint(`export const x = 12;`)).toMatchInlineSnapshot(`
       "Definition x :=
-        12."
+        12.
+      "
     `);
   });
 });
@@ -193,7 +214,8 @@ describe("functions", () => {
     expect(compileAndPrint(`function id<A>(x: A): A {return x;}`))
       .toMatchInlineSnapshot(`
       "Definition id {A : Type} (x : A) : A :=
-        x."
+        x.
+      "
     `);
   });
 });
@@ -211,9 +233,11 @@ describe("if", () => {
 
 describe("imports", () => {
   it("handles React import", () => {
-    expect(
-      compileAndPrint(`import React, {PureComponent} from "react";`),
-    ).toMatchInlineSnapshot(`""`);
+    expect(compileAndPrint(`import React, {PureComponent} from "react";`))
+      .toMatchInlineSnapshot(`
+      "
+      "
+    `);
   });
 
   it("does not handle non-React imports", () => {
@@ -251,9 +275,10 @@ describe("labels", () => {
 
 describe("opaque types", () => {
   it("handles opaque types", () => {
-    expect(compileAndPrint(`opaque type t = number;`)).toMatchInlineSnapshot(
-      `"Definition t : Type := Z."`,
-    );
+    expect(compileAndPrint(`opaque type t = number;`)).toMatchInlineSnapshot(`
+      "Definition t : Type := Z.
+      "
+    `);
   });
 });
 
@@ -294,7 +319,8 @@ describe("variable definitions", () => {
   it("handles definitions of constants", () => {
     expect(compileAndPrint(`const n = 12;`)).toMatchInlineSnapshot(`
       "Definition n :=
-        12."
+        12.
+      "
     `);
   });
 
