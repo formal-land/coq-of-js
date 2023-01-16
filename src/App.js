@@ -118,7 +118,7 @@ export default class App extends PureComponent<Props, State> {
               </span>
             </span>
             coq-of-js
-            <a className="sub-title" href="https://github.com/clarus/coq-of-js">
+            <a className="sub-title" href="https://github.com/formal-land/coq-of-js">
               Sources
             </a>
           </h1>

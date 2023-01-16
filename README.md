@@ -1,10 +1,10 @@
 # 🌍 🐓 coq-of-js
 > Import JavaScript programs to Coq. Prove all the things! 🐓
 
-[![travis status](https://img.shields.io/travis/com/clarus/coq-of-js/master.svg?label=travis-ci&style=flat-square)](https://travis-ci.org/clarus/coq-of-js)
-[![codecov status](https://img.shields.io/codecov/c/github/clarus/coq-of-js.svg?style=flat-square)](https://codecov.io/gh/clarus/coq-of-js)
+[![travis status](https://img.shields.io/travis/com/formal-land/coq-of-js/master.svg?label=travis-ci&style=flat-square)](https://travis-ci.org/formal-land/coq-of-js)
+[![codecov status](https://img.shields.io/codecov/c/github/formal-land/coq-of-js.svg?style=flat-square)](https://codecov.io/gh/formal-land/coq-of-js)
 
-**Online demo: https://clarus.github.io/coq-of-js/**
+**Online demo: https://formal-land.github.io/coq-of-js/**
 
 The aim of this project is to import JavaScript programs to the [Coq](https://coq.inria.fr/) language, to do [formal verification](https://en.wikipedia.org/wiki/Formal_verification) on JavaScript code.
 
@@ -29,7 +29,7 @@ yarn start
 ```
 
 ## Examples
-See the [online demo](https://clarus.github.io/coq-of-js/).
+See the [online demo](https://formal-land.github.io/coq-of-js/).
 
 ## Todo
 We want to validate the basis:
