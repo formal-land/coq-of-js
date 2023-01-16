@@ -27,6 +27,10 @@ function getInitialJsInput(): string {
   return demoInput;
 }
 
+function ExternalLink() {
+  return <svg width="13.5" height="13.5" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"></path></svg>;
+}
+
 export default class App extends PureComponent<Props, State> {
   state: State = {
     jsInput: getInitialJsInput(),
@@ -118,25 +122,31 @@ export default class App extends PureComponent<Props, State> {
               </span>
             </span>
             coq-of-js
-            <a className="sub-title" href="https://github.com/formal-land/coq-of-js">
-              Sources
+            <span className="signature">by <a href="https://formal.land/" rel="noopener noreferrer" target="_blank">Formal&nbsp;Land&nbsp;🌲&nbsp;<ExternalLink /></a></span>
+            <a
+              className="sub-title"
+              href="https://github.com/formal-land/coq-of-js"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              GitHub&nbsp;<ExternalLink />
             </a>
           </h1>
         </div>
         <div className="split js-source">
-          <h2>JavaScript editor</h2>
+          <h2>🌍 JavaScript editor</h2>
           <textarea onChange={this.onChangeJsInput} value={jsInput} />
         </div>
         <div className="split coq-source">
-          <h2>Generated Coq</h2>
+          <h2>🐓 Generated Coq</h2>
           <Output output={coq} />
         </div>
         <div className="split js-ast">
-          <h2>JavaScript AST</h2>
+          <h2>🔬 JavaScript AST</h2>
           <Output output={jsAst} />
         </div>
         <div className="split coq-ast">
-          <h2>Coq AST</h2>
+          <h2>🔬 Coq AST</h2>
           <Output output={coqAst} />
         </div>
       </div>

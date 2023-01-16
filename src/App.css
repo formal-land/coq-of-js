@@ -17,7 +17,20 @@
 .header h1 .sub-title {
   color: white;
   font-size: 16px;
-  margin-left: 20px;
+  margin-left: 40px;
+}
+
+/* Curly font */
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500&display=swap');
+
+.signature {
+  font-family: 'Dancing Script', cursive;
+  margin-left: 40px;
+  color: white;
+}
+
+.signature a {
+  color: white;
 }
 
 .split {
