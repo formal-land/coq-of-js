@@ -122,7 +122,7 @@ export default class App extends PureComponent<Props, State> {
               </span>
             </span>
             coq-of-js
-            <span className="signature">by <a href="https://formal.land/" rel="noopener noreferrer" target="_blank">Formal&nbsp;Land&nbsp;🌲&nbsp;<ExternalLink /></a></span>
+            <span className="signature">by <a href="https://formal.land/docs/verification/typescript" rel="noopener noreferrer" target="_blank">Formal&nbsp;Land&nbsp;🌲&nbsp;<ExternalLink /></a></span>
             <a
               className="sub-title"
               href="https://github.com/formal-land/coq-of-js"
